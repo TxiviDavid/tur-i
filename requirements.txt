@@ -19,4 +19,4 @@ openrouteservice
 python-dateutil
 django-ipware
 
-flake8>=3.6.0,<3.7.0
+flake8>=3.8.0,<3.9.0
