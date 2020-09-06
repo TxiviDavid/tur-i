@@ -3,6 +3,7 @@ from django.db import models as models
 from django.contrib.gis.db import models as geoModels
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
                                         PermissionsMixin
+from django.conf import settings
 
 
 class Usermanager(BaseUserManager):
@@ -52,19 +53,25 @@ class Tipo(models.TextChoices):
 
 
 class PuntoInteres(geoModels.Model):
-    nombre = models.CharField("Nombre", max_length = 50, blank = True)
-    tipo = models.CharField(choices=Tipo.choices, max_length = 50, default=Tipo.BIODIVERSIDAD)
-    descripcion = models.TextField("Descripción", max_length = 1500, blank = True)
-    observaciones = models.TextField("Observaciones", max_length = 250, blank = True)
-    geom = geoModels.PointField(srid = 25830, blank = True, null = True)
-    #objects = models.GeoManager()
+    nombre = models.CharField("Nombre", max_length=50, blank=True)
+    tipo = models.CharField(choices=Tipo.choices, max_length=50,
+                            default=Tipo.BIODIVERSIDAD)
+    descripcion = models.TextField("Descripción", max_length=1500, blank=True)
+    observaciones = models.TextField("Observaciones", max_length=250,
+                                     blank=True)
+    geom = geoModels.PointField(srid=25830, blank=True, null=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+    # objects = models.GeoManager()
 
     class Meta:
         verbose_name = 'Punto de Interés'
         verbose_name_plural = 'Puntos de Interés'
 
-    def __unicode__(self):
-        return unicode(self.nombre)
+    # def __unicode__(self):
+        # return unicode(self.nombre)
 
     def __str__(self):
         return self.nombre

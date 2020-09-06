@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 
 from core import models
 
+
 def sample_user(email='test@londonappdev.com', password='testpass'):
     """Create a sample user"""
     return get_user_model().objects.create_user(email, password)
@@ -47,6 +48,7 @@ class ModelTests(TestCase):
     def test_PuntoInteres_str(self):
         """Test the tag string representation"""
         PuntoInteres = models.PuntoInteres.objects.create(
+            user=sample_user(),
             nombre='Monasterio'
         )
 
