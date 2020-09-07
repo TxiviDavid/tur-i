@@ -53,7 +53,7 @@ class Tipo(models.TextChoices):
 
 
 class PuntoInteres(geoModels.Model):
-    nombre = models.CharField("Nombre", max_length=50, blank=True)
+    nombre = models.CharField("Nombre", max_length=50, null=False, blank=False)
     tipo = models.CharField(choices=Tipo.choices, max_length=50,
                             default=Tipo.BIODIVERSIDAD)
     descripcion = models.TextField("Descripción", max_length=1500, blank=True)
@@ -72,6 +72,37 @@ class PuntoInteres(geoModels.Model):
 
     # def __unicode__(self):
         # return unicode(self.nombre)
+
+    def __str__(self):
+        return self.nombre
+
+
+class Cocina(models.TextChoices):
+    CASERA = 'CASERA', 'Casera'
+    ASIATICO = 'ASIATICO', 'Asiático'
+    SIDRERIA = 'SIDRERIA', 'Sidreria'
+    PIZZERIA = 'PIZZERIA', 'Pizzeria'
+    ASADOR = 'ASADOR', 'Asador'
+
+
+class Restaurante(geoModels.Model):
+    cocina = models.CharField(choices=Cocina.choices, max_length=50,
+                              default=Cocina.CASERA)
+    nombre = models.CharField("Nombre", max_length=50, null=False, blank=False)
+    direccion = models.CharField(max_length=254, null=True)
+    poblacion = models.CharField(max_length=254, null=True)
+    telefono = models.CharField(max_length=25, blank=True, null=True)
+    email = models.CharField(max_length=100, blank=True, null=True)
+    url = models.CharField(max_length=254, blank=True, null=True)
+    geom = geoModels.PointField(srid=25830, blank=True, null=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+
+    class Meta:
+        verbose_name = 'Restaurante'
+        verbose_name_plural = 'Restaurantes'
 
     def __str__(self):
         return self.nombre

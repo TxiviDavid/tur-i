@@ -3,7 +3,7 @@ from rest_framework import viewsets, mixins
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from core.models import PuntoInteres
+from core.models import PuntoInteres, Restaurante
 
 from recursos import serializers
 
@@ -28,3 +28,9 @@ class PuntoInteresViewSet(BaseRecursosAttrViewSet):
     """Manage puntosinteres in the database"""
     queryset = PuntoInteres.objects.all()
     serializer_class = serializers.PuntoInteresSerializer
+
+
+class RestauranteViewSet(BaseRecursosAttrViewSet):
+    """Manage puntosinteres in the database"""
+    queryset = Restaurante.objects.all()
+    serializer_class = serializers.RestauranteSerializer

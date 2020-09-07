@@ -46,10 +46,19 @@ class ModelTests(TestCase):
         self.assertTrue(user.is_staff)
 
     def test_PuntoInteres_str(self):
-        """Test the tag string representation"""
+        """Test the puntoInteres string representation"""
         PuntoInteres = models.PuntoInteres.objects.create(
             user=sample_user(),
             nombre='Monasterio'
         )
 
         self.assertEqual(str(PuntoInteres), PuntoInteres.nombre)
+
+    def test_Restaurante_str(self):
+        """Test the restaurante string representation"""
+        Restaurante = models.Restaurante.objects.create(
+            user=sample_user(),
+            nombre='Piko'
+        )
+
+        self.assertEqual(str(Restaurante), Restaurante.nombre)

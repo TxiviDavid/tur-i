@@ -6,6 +6,7 @@ from recursos import views
 
 router = DefaultRouter()
 router.register('puntosInteres', views.PuntoInteresViewSet)
+router.register('restaurantes', views.RestauranteViewSet)
 
 app_name = 'recursos'
 

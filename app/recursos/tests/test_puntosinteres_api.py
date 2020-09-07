@@ -10,10 +10,10 @@ from core.models import PuntoInteres
 from recursos.serializers import PuntoInteresSerializer
 
 
-PUNTOSINTERES_URL = reverse('recursos:puntosInteres-list')
+PUNTOSINTERES_URL = reverse('recursos:puntointeres-list')
 
 
-class PublicTagsApiTests(TestCase):
+class PublicPuntoInteresApiTests(TestCase):
     """Test the publicly available puntosInteres API"""
 
     def setUp(self):
@@ -26,7 +26,7 @@ class PublicTagsApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class PrivateTagsApiTests(TestCase):
+class PrivatePuntoInteresApiTests(TestCase):
     """Test the authorized user puntosInteres API"""
 
     def setUp(self):
@@ -37,7 +37,7 @@ class PrivateTagsApiTests(TestCase):
         self.client = APIClient()
         self.client.force_authenticate(self.user)
 
-    def test_retrieve_puntosInteres(self):
+    def test_retrieve_puntoInteres(self):
         """Test retrieving puntosInteres"""
         PuntoInteres.objects.create(user=self.user, nombre='Vegan')
         PuntoInteres.objects.create(user=self.user, nombre='Dessert')
@@ -49,7 +49,7 @@ class PrivateTagsApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
 
-    def test_PuntoInteres_limited_to_user(self):
+    def test_puntoInteres_limited_to_user(self):
         """Test that PuntoInteres returned are for authenticated user"""
         user2 = get_user_model().objects.create_user(
             'other@londonappdev.com',
@@ -65,7 +65,7 @@ class PrivateTagsApiTests(TestCase):
         self.assertEqual(len(res.data), 1)
         self.assertEqual(res.data[0]['nombre'], poi.nombre)
 
-    def test_create_tag_successful(self):
+    def test_create_puntoInteres_successful(self):
         """Test creating a new puntosInteres"""
         payload = {'nombre': 'Simple'}
         self.client.post(PUNTOSINTERES_URL, payload)
@@ -76,7 +76,7 @@ class PrivateTagsApiTests(TestCase):
         ).exists()
         self.assertTrue(exists)
 
-    def test_create_tag_invalid(self):
+    def test_create_puntoInteres_invalid(self):
         """Test creating a new puntosInteres with invalid payload"""
         payload = {'nombre': ''}
         res = self.client.post(PUNTOSINTERES_URL, payload)
