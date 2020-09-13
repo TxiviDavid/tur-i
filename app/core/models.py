@@ -1,9 +1,43 @@
 
+import uuid
+import os
 from django.db import models as models
 from django.contrib.gis.db import models as geoModels
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
                                         PermissionsMixin
 from django.conf import settings
+
+
+def punto_interes_image_file_path(instance, filename):
+    """Generate file path for new puntoInteres image"""
+    ext = filename.split('.')[-1]
+    filename = f'{uuid.uuid4()}.{ext}'
+
+    return os.path.join('uploads/puntointeres/', filename)
+
+
+def restaurante_image_file_path(instance, filename):
+    """Generate file path for new restaurante image"""
+    ext = filename.split('.')[-1]
+    filename = f'{uuid.uuid4()}.{ext}'
+
+    return os.path.join('uploads/restaurante/', filename)
+
+
+def reporte_image_file_path(instance, filename):
+    """Generate file path for new reporte image"""
+    ext = filename.split('.')[-1]
+    filename = f'{uuid.uuid4()}.{ext}'
+
+    return os.path.join('uploads/reporte/', filename)
+
+
+def gpxtrack_image_file_path(instance, filename):
+    """Generate file path for new gpxtrack image"""
+    ext = filename.split('.')[-1]
+    filename = f'{uuid.uuid4()}.{ext}'
+
+    return os.path.join('uploads/gpxtrack/', filename)
 
 
 class Usermanager(BaseUserManager):
@@ -59,6 +93,13 @@ class PuntoInteres(geoModels.Model):
     descripcion = models.TextField("Descripción", max_length=1500, blank=True)
     observaciones = models.TextField("Observaciones", max_length=250,
                                      blank=True)
+    panorama360 = models.ImageField(upload_to='panoramas/',
+                                    blank=True, null=True)
+    foto = models.ImageField(upload_to=punto_interes_image_file_path,
+                             blank=True, null=True)
+    tiempo = models.DecimalField(max_digits=4, decimal_places=1, default=1,
+                                 blank=True)
+    modelo3D = models.CharField(max_length=254, blank=True)
     geom = geoModels.PointField(srid=25830, blank=True, null=True)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -94,6 +135,8 @@ class Restaurante(geoModels.Model):
     telefono = models.CharField(max_length=25, blank=True, null=True)
     email = models.CharField(max_length=100, blank=True, null=True)
     url = models.CharField(max_length=254, blank=True, null=True)
+    foto = models.ImageField(upload_to=restaurante_image_file_path,
+                             blank=True, null=True)
     geom = geoModels.PointField(srid=25830, blank=True, null=True)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -112,7 +155,8 @@ class Reporte(geoModels.Model):
     signo = models.IntegerField(null=False)
     tipo = models.IntegerField(null=False)
     detalle = models.IntegerField(null=False)
-    # foto = models.CharField(upload_to='imagenes/', blank=True, null=True)
+    foto = models.ImageField(upload_to=reporte_image_file_path,
+                             blank=True, null=True)
     descripcion = models.CharField(max_length=254, blank=True, null=True)
     geom = geoModels.PointField(srid=25830, blank=True, null=True)
     user = models.ForeignKey(
@@ -211,7 +255,8 @@ class GPXTrack(geoModels.Model):
                                    blank=True)
     observaciones = models.TextField("Observaciones", max_length=250,
                                      blank=True)
-    # image = models.ImageField(upload_to='imagenes/')
+    foto = models.ImageField(upload_to=gpxtrack_image_file_path,
+                             blank=True, null=True)
     geom = geoModels.MultiLineStringField(dim=3)
     gpx_fichero = models.ForeignKey(GPXFile, null=False,
                                     on_delete=models.CASCADE)

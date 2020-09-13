@@ -1,4 +1,5 @@
 import mock
+from unittest.mock import patch
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point, LineString, MultiLineString
@@ -152,3 +153,43 @@ class ModelTests(TestCase):
         )
 
         self.assertEqual(str(TrackPoint), TrackPoint.nombre)
+
+    @patch('uuid.uuid4')
+    def test_punto_interes_file_name_uuid(self, mock_uuid):
+        """Test that image is saved in the correct location"""
+        uuid = 'test-uuid'
+        mock_uuid.return_value = uuid
+        file_path = models.punto_interes_image_file_path(None, 'myimage.jpg')
+
+        exp_path = f'uploads/puntointeres/{uuid}.jpg'
+        self.assertEqual(file_path, exp_path)
+
+    @patch('uuid.uuid4')
+    def test_restaurante_file_name_uuid(self, mock_uuid):
+        """Test that image is saved in the correct location"""
+        uuid = 'test-uuid'
+        mock_uuid.return_value = uuid
+        file_path = models.restaurante_image_file_path(None, 'myimage.jpg')
+
+        exp_path = f'uploads/restaurante/{uuid}.jpg'
+        self.assertEqual(file_path, exp_path)
+
+    @patch('uuid.uuid4')
+    def test_reporte_file_name_uuid(self, mock_uuid):
+        """Test that image is saved in the correct location"""
+        uuid = 'test-uuid'
+        mock_uuid.return_value = uuid
+        file_path = models.reporte_image_file_path(None, 'myimage.jpg')
+
+        exp_path = f'uploads/reporte/{uuid}.jpg'
+        self.assertEqual(file_path, exp_path)
+
+    @patch('uuid.uuid4')
+    def test_gpxtrack_file_name_uuid(self, mock_uuid):
+        """Test that image is saved in the correct location"""
+        uuid = 'test-uuid'
+        mock_uuid.return_value = uuid
+        file_path = models.gpxtrack_image_file_path(None, 'myimage.jpg')
+
+        exp_path = f'uploads/gpxtrack/{uuid}.jpg'
+        self.assertEqual(file_path, exp_path)
