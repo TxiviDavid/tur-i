@@ -22,6 +22,15 @@ class RestauranteSerializer(serializers.ModelSerializer):
         read_only_Fields = ('id',)
 
 
+class RestauranteImageSerializer(serializers.ModelSerializer):
+    """Serializer for uploading images to restaurante"""
+
+    class Meta:
+        model = Restaurante
+        fields = ('id', 'foto')
+        read_only_fields = ('id',)
+
+
 class ReporteSerializer(serializers.ModelSerializer):
     """Serializer for Reporte object"""
 
@@ -50,7 +59,7 @@ class GPXPointSerializer(serializers.ModelSerializer):
 
 
 class TrackPointSerializer(serializers.ModelSerializer):
-    """Serializer for TrackPoint object"""
+    """Serializer for TrackPoint object."""
 
     class Meta:
         model = TrackPoint

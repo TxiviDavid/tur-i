@@ -1,3 +1,8 @@
+import tempfile
+import os
+
+from PIL import Image
+
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.test import TestCase
@@ -11,6 +16,21 @@ from recursos.serializers import RestauranteSerializer
 
 
 RESTAURANTES_URL = reverse('recursos:restaurante-list')
+
+
+def image_upload_url(restaurante_id):
+    """Return URL for restaurante image upload"""
+    return reverse('recursos:restaurante-upload-image', args=[restaurante_id])
+
+
+def sample_restaurante(user, **params):
+    """Create and return a sample restaurante"""
+    defaults = {
+        'nombre': 'Sample restaurant',
+    }
+    defaults.update(params)
+
+    return Restaurante.objects.create(user=user, **defaults)
 
 
 class PublicRestaurantesApiTests(TestCase):
@@ -81,5 +101,38 @@ class PrivateRestaurantesAPITests(TestCase):
         """Test creating invalid restaurante fails"""
         payload = {'nombre': ''}
         res = self.client.post(RESTAURANTES_URL, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+class RestauranteImageUploadTests(TestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user('user', 'testpass')
+        self.client.force_authenticate(self.user)
+        self.restaurante = sample_restaurante(user=self.user)
+
+    def tearDown(self):
+        self.restaurante.foto.delete()
+
+    def test_upload_image_to_restaurante(self):
+        """Test uploading an image to restaurante"""
+        url = image_upload_url(self.restaurante.id)
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as ntf:
+            img = Image.new('RGB', (10, 10))
+            img.save(ntf, format='JPEG')
+            ntf.seek(0)
+            res = self.client.post(url, {'foto': ntf}, format='multipart')
+
+        self.restaurante.refresh_from_db()
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('foto', res.data)
+        self.assertTrue(os.path.exists(self.restaurante.foto.path))
+
+    def test_upload_image_bad_request(self):
+        """Test uploading an invalid image"""
+        url = image_upload_url(self.restaurante.id)
+        res = self.client.post(url, {'foto': 'notimage'}, format='multipart')
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
