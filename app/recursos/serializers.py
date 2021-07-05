@@ -59,7 +59,7 @@ class GPXPointSerializer(serializers.ModelSerializer):
 
 
 class TrackPointSerializer(serializers.ModelSerializer):
-    """Serializer for TrackPoint object."""
+    """Serializer for TrackPoint object"""
 
     class Meta:
         model = TrackPoint
