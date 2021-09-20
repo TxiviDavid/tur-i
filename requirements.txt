@@ -2,7 +2,7 @@ Django>=3.1.0,<3.2.0
 djangorestframework>=3.11.0,<3.12.0
 psycopg2
 Pillow
-django-jet
+django-3-jet
 django-leaflet
 django-geojson
 jsonpickle
@@ -19,5 +19,10 @@ openrouteservice
 python-dateutil
 django-ipware
 mock
+djangorestframework-gis
+requests
+xmltodict
+geojson
+gpxpy
 
 flake8>=3.8.0,<3.9.0

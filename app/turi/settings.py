@@ -32,13 +32,17 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'jet.dashboard',
+    'jet',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'leaflet',
     'rest_framework',
+    'rest_framework_gis',
     'rest_framework.authtoken',
     'corsheaders',
     'core',
@@ -116,6 +120,45 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_WHITELIST = (
    'http://localhost:4200',
 )
+
+LEAFLET_CONFIG = {
+
+    'MIN_ZOOM': 3,
+    'MAX_ZOOM': 18,
+    'DEFAULT_ZOOM': 11,
+    'DEFAULT_CENTER': (42.9, -2.0),
+    'TILES': [('Imagen satelite',
+                   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                   {
+                       'attribution': 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'}),
+                  ('OSM', 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                   {
+                       'attribution': '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'})],
+    #'SPATIAL_EXTENT': (-1.86, 43.055, -2.41, 42.44),
+
+    'PLUGINS': {
+            'leaflet.snap': {
+                #'css': ['relative/path/to/stylesheet.css', '/root/path/to/stylesheet.css'],
+                'js': '/static/leaflet/draw/leaflet.snap.js',
+                'auto-include': True,
+            },
+            'leaflet.geometry': {
+                #'css': ['relative/path/to/stylesheet.css', '/root/path/to/stylesheet.css'],
+                 'js': '/static/leaflet/draw/leaflet.geometryutil.js',
+                'auto-include': True,
+            },
+            'leaflet.myGeometry': {
+                #'css': ['relative/path/to/stylesheet.css', '/root/path/to/stylesheet.css'],
+                'js': '/static/leaflet/draw/myGeometry.js',
+                'auto-include': True,
+            },
+            'turf':{
+                'js': 'https://npmcdn.com/@turf/turf/turf.min.js',
+                'auto-include': True,
+            }
+
+        }
+    }
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 

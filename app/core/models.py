@@ -95,8 +95,8 @@ class PuntoInteres(geoModels.Model):
                                      blank=True)
     panorama360 = models.ImageField(upload_to='panoramas/',
                                     blank=True, null=True)
-    foto = models.ImageField(upload_to=punto_interes_image_file_path,
-                             blank=True, null=True)
+    #foto = models.ImageField(upload_to=punto_interes_image_file_path,
+                             #blank=True, null=True)
     tiempo = models.DecimalField(max_digits=4, decimal_places=1, default=1,
                                  blank=True)
     modelo3D = models.CharField(max_length=254, blank=True)
@@ -116,6 +116,14 @@ class PuntoInteres(geoModels.Model):
 
     def __str__(self):
         return str(self.nombre)
+
+class PuntoInteresImage(models.Model):
+    puntoInteres = models.ForeignKey(PuntoInteres, related_name='images',on_delete=models.CASCADE)
+    image = models.ImageField(upload_to=punto_interes_image_file_path, blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Material multimedia de los puntos de interés'
+        verbose_name_plural = 'Materiales multimedia de los puntos de interés'
 
 
 class Cocina(models.TextChoices):
@@ -158,7 +166,7 @@ class Reporte(geoModels.Model):
     foto = models.ImageField(upload_to=reporte_image_file_path,
                              blank=True, null=True)
     descripcion = models.CharField(max_length=254, blank=True, null=True)
-    geom = geoModels.PointField(srid=25830, blank=True, null=True)
+    geom = geoModels.PointField(srid=4326, blank=True, null=True)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE
@@ -309,6 +317,20 @@ class TrackPoint(geoModels.Model):
     class Meta:
         verbose_name = 'Punto GPX'
         verbose_name_plural = 'Puntos GPX'
+
+    def __str__(self):
+        return str(self.nombre)
+
+class PruebaLine(geoModels.Model):
+    nombre = models.CharField("Nombre", max_length=50, blank=True)
+    descripcion = models.CharField("Descripción", max_length=250, blank=True)
+    geom = geoModels.MultiLineStringField(dim=3)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+    # objects = models.GeoManager()
+
 
     def __str__(self):
         return str(self.nombre)

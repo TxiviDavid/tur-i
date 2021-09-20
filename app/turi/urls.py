@@ -17,9 +17,16 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
 from django.conf import settings
+from recursos import views
+from plan.views import PlanView
 
 urlpatterns = [
+    path('jet/', include('jet.urls', 'jet')),  # Django JET URLS
+    path('jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),  # Django JET dashboard URLS
     path('admin/', admin.site.urls),
     path('api/user/', include('user.urls')),
     path('api/recursos/', include('recursos.urls')),
+    path('api/recursos/alojamientos/', views.AlojamientoView.as_view()),
+    path('api/recursos/dominios/', views.DominiosView.as_view()),
+    path('api/plan/', PlanView.as_view()),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
