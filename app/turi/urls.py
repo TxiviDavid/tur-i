@@ -29,4 +29,6 @@ urlpatterns = [
     path('api/recursos/alojamientos/', views.AlojamientoView.as_view()),
     path('api/recursos/dominios/', views.DominiosView.as_view()),
     path('api/plan/', PlanView.as_view()),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] 
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT,)
