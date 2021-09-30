@@ -19,6 +19,7 @@ from django.conf.urls.static import static
 from django.conf import settings
 from recursos import views
 from plan.views import PlanView
+from route.views import RouteView
 
 urlpatterns = [
     path('jet/', include('jet.urls', 'jet')),  # Django JET URLS
@@ -29,6 +30,7 @@ urlpatterns = [
     path('api/recursos/alojamientos/', views.AlojamientoView.as_view()),
     path('api/recursos/dominios/', views.DominiosView.as_view()),
     path('api/plan/', PlanView.as_view()),
-] 
+    path('api/route/', RouteView.as_view()),
+]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT,)
