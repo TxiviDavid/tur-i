@@ -35,7 +35,13 @@ class ReportesAdmin(LeafletGeoAdmin):
     list_per_page = 15
     #inlines = [ PuntoInteresImageInline, ]
 
-
+class RestauranteAdmin(LeafletGeoAdmin):
+    list_display = ['cocina','nombre','poblacion']
+    list_filter = (
+        ('cocina'),
+        ('poblacion')
+    )
+    list_per_page = 15
 
 #esto es otro modo de anadir el modelo en el admin
 @admin.register(recursos_models.GPXFile)
@@ -69,3 +75,4 @@ admin.site.register(recursos_models.Reporte, ReportesAdmin)
 admin.site.register(recursos_models.GPXPoint, GPXPointAdmin)
 admin.site.register(recursos_models.GPXTrack, GPXTrackAdmin)
 admin.site.register(recursos_models.PruebaLine, PruebaAdmin)
+admin.site.register(recursos_models.Restaurante, RestauranteAdmin)
