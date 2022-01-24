@@ -42,9 +42,9 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
 'http://localhost:4200'
 ]
-CORS_ORIGIN_WHITELIST = [
+CORS_ORIGIN_WHITELIST = (
    'http://localhost:4200',
-]
+)
 # Application definition
 
 INSTALLED_APPS = [
