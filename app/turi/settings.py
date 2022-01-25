@@ -36,15 +36,7 @@ ALLOWED_HOSTS.extend(
     )
 )
 
-#CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
-#CORS_ALLOWED_ORIGINS = [
-#'http://localhost:4200'
-#]
-#CORS_ORIGIN_WHITELIST = (
-#   'http://localhost:4200',
-#)
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -60,7 +52,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_gis',
     'rest_framework.authtoken',
-    'corsheaders',
     'core',
     'user',
     'django.contrib.gis',
@@ -68,7 +59,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
