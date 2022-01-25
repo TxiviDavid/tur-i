@@ -1,9 +1,9 @@
 server{
   listen ${LISTEN_PORT};
-  add_header 'Access-Control-Allow-Origin' '*';
 
   location /static {
     alias /vol/static;
+    add_header 'Access-Control-Allow-Origin' '*';
   }
 
   location / {
