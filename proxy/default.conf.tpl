@@ -1,5 +1,5 @@
 server{
-  listen ${LISTEN_PORT} default_server;
+  listen ${LISTEN_PORT};
   server_name _;
   location /static {
     alias /vol/static;
