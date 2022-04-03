@@ -1,7 +1,7 @@
 server{
   listen ${LISTEN_PORT};
   server_name *.davidrivasmarin.com davidrivasmarin.com;
-  return 301 https://ec2-3-144-205-169.us-east-2.compute.amazonaws.com;
+  return 301 https://davidrivasmarin.com;
 }
 
 server{
