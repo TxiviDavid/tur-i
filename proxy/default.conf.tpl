@@ -1,12 +1,12 @@
 server{
   listen ${LISTEN_PORT};
-  server_name www.ec2-13-59-188-182.us-east-2.compute.amazonaws.com;
+  server_name ec2-3-143-18-99.us-east-2.compute.amazonaws.com;
   return 301 https://$server_name$request_uri;
 }
 
 server{
   listen 443 ssl;
-  server_name www.ec2-13-59-188-182.us-east-2.compute.amazonaws.com;
+  server_name ec2-3-143-18-99.us-east-2.compute.amazonaws.com;
   ssl_certificate /etc/nginx/certs/ser.pem;
   ssl_certificate_key /etc/nginx/certs/ser.key;
   location /static {
