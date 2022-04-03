@@ -1,7 +1,7 @@
 server{
   listen ${LISTEN_PORT};
   server_name *.ec2-3-144-205-169.us-east-2.compute.amazonaws.com ec2-3-144-205-169.us-east-2.compute.amazonaws.com;
-  return 301 https://$server_name$request_uri;
+  return 301 https://ec2-3-144-205-169.us-east-2.compute.amazonaws.com;
 }
 
 server{
