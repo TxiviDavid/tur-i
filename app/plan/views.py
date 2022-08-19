@@ -180,6 +180,7 @@ class PlanView(views.APIView):
         route_normal = client.directions(**request_params)
         dataJson = route_normal['features'][0]['geometry']
         geojson = json.dumps(dataJson, cls=DjangoJSONEncoder)
+        geojsonProperties = route_normal['features'][0]['properties']
         duracion_total_horas = 20
         #duracion_total_horas = route_normal['features'][0]['properties']['summary']['duration'] / 3600.00
         # Round a number to the closest half integer.
@@ -306,7 +307,7 @@ class PlanView(views.APIView):
                                 html += '</div>'
                                 html += '</div>'
                                 html += '<div class="line-between"></div>'
-                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index]])
+                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}])
                                 recursoIndex = recursoIndex + 1
                         html += '</div>'
                         plan.append({str(fechaLlegadaSinHora):itemsPlan})
@@ -389,7 +390,7 @@ class PlanView(views.APIView):
                                 html += '</div>'
                                 html += '</div>'
                                 html += '<div class="line-between"></div>'
-                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index]])
+                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}])
                                 recursoIndex = recursoIndex + 1
                         html += '</div>'
                         plan.append({str(fechaLlegadaSinHora):itemsPlan})
@@ -483,7 +484,7 @@ class PlanView(views.APIView):
                                 html += '</div>'
                                 html += '</div>'
                                 html += '<div class="line-between"></div>'
-                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index]])
+                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}])
                                 recursoIndex = recursoIndex + 1
                         html += '</div>'
                         plan.append({str(fechaSiguienteSinHora):itemsPlan})
@@ -564,7 +565,7 @@ class PlanView(views.APIView):
                                 html += '</div>'
                                 html += '</div>'
                                 html += '<div class="line-between"></div>'
-                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index]])
+                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}])
                                 recursoIndex = recursoIndex + 1
                         html += '</div>'
                         plan.append({str(fechaSiguienteSinHora):itemsPlan})
@@ -658,7 +659,7 @@ class PlanView(views.APIView):
                                     html += '</div>'
                                     html += '</div>'
                                     html += '<div class="line-between"></div>'
-                                    itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index]])
+                                    itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}])
                                     recursoIndex = recursoIndex + 1
                             html += '</div>'
                             plan.append({str(fechaSiguienteSinHora):itemsPlan})
@@ -740,7 +741,7 @@ class PlanView(views.APIView):
                                     html += '</div>'
                                     html += '</div>'
                                     html += '<div class="line-between"></div>'
-                                    itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index]])
+                                    itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}])
                                     recursoIndex = recursoIndex + 1
                             html += '</div>'
                             plan.append({str(fechaSiguienteSinHora):itemsPlan})
@@ -762,6 +763,7 @@ class PlanView(views.APIView):
         context = {
             'html': html,
             'data':geojson,
+            'dataProperties': geojsonProperties,
             'recursos':recursos_arr,
             'recursosNombres':recursosNombres_arr,
             'plan':plan

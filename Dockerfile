@@ -1,7 +1,9 @@
-FROM ubuntu
+FROM ubuntu:20.04
 MAINTAINER Txivi
 
 ENV PYTHONUNBUFFERED 1
+ENV TZ=Europe/Madrid
+ENV DEBIAN_FRONTEND noninteractive
 
 COPY ./requirements.txt /requirements.txt
 # Install dependencies
