@@ -146,6 +146,7 @@ class PlanView(views.APIView):
         tipoRecursos = list(recursoInicio.values('tipo'))
         observacionesRecursos = list(recursoInicio.values('observaciones'))
         fotosRecursos = list(recursoInicio.values('images'))
+        idRecursos = list(recursoInicio.values('id'))
 
         # ORS
         #recursos_dict = {}
@@ -153,6 +154,10 @@ class PlanView(views.APIView):
         recursosNombres_arr.append({'nombre':'Comienzo'})
         for nombre in nombreRecursos:
             recursosNombres_arr.append(nombre)
+        resursosIds_arr = []
+        resursosIds_arr.append({'id':0})
+        for idd in idRecursos:
+            resursosIds_arr.append(idd)
         recursos_arr = []
         recursos_arr.append([float(longitud), float(latitude)])
         h = 1
@@ -766,6 +771,7 @@ class PlanView(views.APIView):
             'dataProperties': geojsonProperties,
             'recursos':recursos_arr,
             'recursosNombres':recursosNombres_arr,
-            'plan':plan
+            'plan':plan,
+            'recursosIds':resursosIds_arr
         }
         return Response(context, status=status.HTTP_200_OK)

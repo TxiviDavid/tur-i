@@ -31,6 +31,13 @@ def reporte_image_file_path(instance, filename):
 
     return os.path.join('uploads/reporte/', filename)
 
+def plan_image_file_path(instance, filename):
+    """Generate file path for new plan image"""
+    ext = filename.split('.')[-1]
+    filename = f'{uuid.uuid4()}.{ext}'
+
+    return os.path.join('uploads/plan/', filename)
+
 
 def gpxtrack_image_file_path(instance, filename):
     """Generate file path for new gpxtrack image"""
@@ -179,6 +186,24 @@ class Reporte(geoModels.Model):
     def __int__(self):
         return self.id
 
+class Plan(geoModels.Model):
+    nombre = models.CharField(max_length=100, blank=True, null=True)
+    plan = models.JSONField()
+    foto = models.ImageField(upload_to=plan_image_file_path,
+                             blank=True, null=True)
+    descripcion = models.CharField(max_length=254, blank=True, null=True)
+    shared = models.BooleanField(null=False, default=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+
+    class Meta:
+        verbose_name = 'Plan'
+        verbose_name_plural = 'Planes'
+
+    def __int__(self):
+        return self.nombre
 
 class Signo(models.Model):
     signo = models.IntegerField(null=True)

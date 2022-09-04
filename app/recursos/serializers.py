@@ -3,7 +3,7 @@ from rest_framework_gis.serializers import GeoFeatureModelSerializer,GeometrySer
 from rest_framework_gis.fields import GeometryField
 from django.contrib.gis.geos import Point
 
-from core.models import PuntoInteres, Restaurante, Reporte, PuntoInteresImage
+from core.models import PuntoInteres, Restaurante, Reporte, PuntoInteresImage, Plan
 from core.models import GPXTrack, GPXPoint, TrackPoint
 
 
@@ -67,6 +67,17 @@ class ReporteImageSerializer(serializers.ModelSerializer):
         model = Reporte
         fields = ('id', 'foto')
         read_only_fields = ('id',)
+
+class PlanSerializer(serializers.ModelSerializer):
+    """ A class to serialize Plan Object"""
+
+    class Meta:
+        model = Plan
+        fields = ('id', 'nombre', 'plan', 'foto', 'descripcion','shared')
+        read_only_Fields = ('id',)
+
+
+
 
 '''
 https://stackoverflow.com/questions/45532965/django-rest-framework-serializer-without-a-model

@@ -43,6 +43,14 @@ class RestauranteAdmin(LeafletGeoAdmin):
     )
     list_per_page = 15
 
+class PlanAdmin(admin.ModelAdmin):
+    list_display = ['nombre','user','shared']
+    list_filter = (
+        ('nombre'),
+        ('user')
+    )
+    list_per_page = 15
+
 #esto es otro modo de anadir el modelo en el admin
 @admin.register(recursos_models.GPXFile)
 class FileAdmin(admin.ModelAdmin):
@@ -76,3 +84,4 @@ admin.site.register(recursos_models.GPXPoint, GPXPointAdmin)
 admin.site.register(recursos_models.GPXTrack, GPXTrackAdmin)
 admin.site.register(recursos_models.PruebaLine, PruebaAdmin)
 admin.site.register(recursos_models.Restaurante, RestauranteAdmin)
+admin.site.register(recursos_models.Plan, PlanAdmin)

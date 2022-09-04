@@ -4,7 +4,7 @@ from rest_framework import viewsets, mixins, status,views
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from core.models import PuntoInteres, Restaurante, Reporte
+from core.models import PuntoInteres, Restaurante, Reporte, Plan
 from core.models import GPXTrack, GPXPoint, TrackPoint
 
 from recursos import serializers
@@ -140,6 +140,57 @@ class ReporteViewSet(BaseRecursosAttrViewSet):
         reporte = self.get_object()
         serializer = self.get_serializer(
             reporte,
+            data=request.data
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+class PlanViewSet(BaseRecursosAttrViewSet):
+    """Manage plan in the database"""
+    queryset = Plan.objects.all()
+    serializer_class = serializers.PlanSerializer
+
+    def get_queryset(self):
+        #"""Return objects for the current authenticated user only"""
+        return self.queryset.filter(user=self.request.user).order_by('-id')
+
+    def perform_create(self, serializer):
+        """Create a new recurso"""
+        serializer.save(user=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        """Create a new recurso"""
+        request.data._mutable = True
+        request.data['plan'] = json.loads(request.data['plan'])
+        request.data._mutable = False
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def get_serializer_class(self):
+        """Return appropriate serializer class"""
+        if self.action == 'upload_image':
+            return serializers.PlanImageSerializer
+        return self.serializer_class
+
+    @action(methods=['POST'], detail=True, url_path='upload-image')
+    def upload_image(self, request, pk=None):
+        """Upload an image to a plan"""
+        plan = self.get_object()
+        serializer = self.get_serializer(
+            plan,
             data=request.data
         )
 

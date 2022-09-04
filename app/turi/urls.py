@@ -20,6 +20,10 @@ from django.conf import settings
 from recursos import views
 from plan.views import PlanView
 from route.views import RouteView
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularSwaggerView,
+)
 
 urlpatterns = [
     path('jet/', include('jet.urls', 'jet')),  # Django JET URLS
@@ -31,6 +35,12 @@ urlpatterns = [
     path('api/recursos/dominios/', views.DominiosView.as_view()),
     path('api/plan/', PlanView.as_view()),
     path('api/route/', RouteView.as_view()),
+    path('api/schema/', SpectacularAPIView.as_view(), name='api-schema'),
+    path(
+        'api/docs/',
+        SpectacularSwaggerView.as_view(url_name='api-schema'),
+        name='api-docs',
+    )
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT,)
