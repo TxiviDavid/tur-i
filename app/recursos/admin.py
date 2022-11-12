@@ -43,8 +43,24 @@ class RestauranteAdmin(LeafletGeoAdmin):
     )
     list_per_page = 15
 
+class StorymapAdmin(LeafletGeoAdmin):
+    list_display = ['nombre','tipo']
+    list_filter = (
+        ('nombre'),
+        ('tipo')
+    )
+    list_per_page = 15
+
 class PlanAdmin(admin.ModelAdmin):
     list_display = ['nombre','user','shared']
+    list_filter = (
+        ('nombre'),
+        ('user')
+    )
+    list_per_page = 15
+
+class PlanMovilAdmin(admin.ModelAdmin):
+    list_display = ['nombre','user','saved']
     list_filter = (
         ('nombre'),
         ('user')
@@ -84,4 +100,6 @@ admin.site.register(recursos_models.GPXPoint, GPXPointAdmin)
 admin.site.register(recursos_models.GPXTrack, GPXTrackAdmin)
 admin.site.register(recursos_models.PruebaLine, PruebaAdmin)
 admin.site.register(recursos_models.Restaurante, RestauranteAdmin)
+admin.site.register(recursos_models.Storymap, StorymapAdmin)
 admin.site.register(recursos_models.Plan, PlanAdmin)
+admin.site.register(recursos_models.PlanMovil, PlanMovilAdmin)

@@ -6,6 +6,7 @@ from django.contrib.gis.db import models as geoModels
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
                                         PermissionsMixin
 from django.conf import settings
+from django.utils.timezone import now
 
 
 def punto_interes_image_file_path(instance, filename):
@@ -30,6 +31,13 @@ def reporte_image_file_path(instance, filename):
     filename = f'{uuid.uuid4()}.{ext}'
 
     return os.path.join('uploads/reporte/', filename)
+
+def storymap_image_file_path(instance, filename):
+    """Generate file path for new storymap image"""
+    ext = filename.split('.')[-1]
+    filename = f'{uuid.uuid4()}.{ext}'
+
+    return os.path.join('uploads/storymap/', filename)
 
 def plan_image_file_path(instance, filename):
     """Generate file path for new plan image"""
@@ -92,6 +100,12 @@ class Tipo(models.TextChoices):
     MIRADOR = 'MIRADOR', 'Mirador'
     GEOLOGIA = 'GEOLOGIA', 'Geologia'
 
+class StorymapsType(models.TextChoices):
+    HISTORIA = 'HISTORIA', 'Historia'
+    MITOLOGIA = 'MITOLOGIA', 'Mitologia'
+    FOLCLORE = 'FOLCLORE', 'Folclore'
+    MUSICA = 'MUSICA', 'Musica'
+    DEPORTE = 'DEPORTE', 'Deporte'
 
 class PuntoInteres(geoModels.Model):
     nombre = models.CharField("Nombre", max_length=50, null=False, blank=False)
@@ -186,6 +200,26 @@ class Reporte(geoModels.Model):
     def __int__(self):
         return self.id
 
+class Storymap(geoModels.Model):
+    nombre = models.CharField("Nombre", max_length=50, null=False, blank=False)
+    tipo = models.CharField(choices=StorymapsType.choices, max_length=50,
+                            default=StorymapsType.HISTORIA)
+    foto = models.ImageField(upload_to=storymap_image_file_path,
+                             blank=True, null=True)
+    descripcion = models.CharField(max_length=254, blank=True, null=True)
+    geom = geoModels.PointField(srid=4326, blank=True, null=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+
+    class Meta:
+        verbose_name = 'Storymap'
+        verbose_name_plural = 'Storymaps'
+
+    def __int__(self):
+        return self.nombre
+
 class Plan(geoModels.Model):
     nombre = models.CharField(max_length=100, blank=True, null=True)
     plan = models.JSONField()
@@ -193,6 +227,8 @@ class Plan(geoModels.Model):
                              blank=True, null=True)
     descripcion = models.CharField(max_length=254, blank=True, null=True)
     shared = models.BooleanField(null=False, default=False)
+    creationDate = models.DateTimeField(default=now, blank=False)
+    modificationDate = models.DateTimeField(default=now, blank=False)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE
@@ -201,6 +237,28 @@ class Plan(geoModels.Model):
     class Meta:
         verbose_name = 'Plan'
         verbose_name_plural = 'Planes'
+
+    def __int__(self):
+        return self.nombre
+
+class PlanMovil(geoModels.Model):
+    nombre = models.CharField(max_length=100, blank=True, null=True)
+    plan = models.JSONField()
+    foto = models.ImageField(upload_to=plan_image_file_path,
+                             blank=True, null=True)
+    descripcion = models.CharField(max_length=254, blank=True, null=True)
+    shared = models.BooleanField(null=False, default=False)
+    saved =models.BooleanField(null=False, default=False)
+    creationDate = models.DateTimeField(default=now, blank=False)
+    modificationDate = models.DateTimeField(default=now, blank=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+
+    class Meta:
+        verbose_name = 'PlanMovil'
+        verbose_name_plural = 'PlanesMovil'
 
     def __int__(self):
         return self.nombre
@@ -234,7 +292,6 @@ class TrackType(models.TextChoices):
     RED_CAMINOS = 'RED_CAMINOS', 'Red de caminos'
     CAMINOS_NATURALES = 'CAMINOS_NATURALES', 'Caminos naturales'
     OTROS = 'OTROS', 'Otros'
-
 
 def GPX_Folder(instance, filename):
     return "uploaded_gpx_files/%s" % (filename)

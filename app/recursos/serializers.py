@@ -3,7 +3,7 @@ from rest_framework_gis.serializers import GeoFeatureModelSerializer,GeometrySer
 from rest_framework_gis.fields import GeometryField
 from django.contrib.gis.geos import Point
 
-from core.models import PuntoInteres, Restaurante, Reporte, PuntoInteresImage, Plan
+from core.models import PuntoInteres, Restaurante, Reporte, PuntoInteresImage, Plan, Storymap, PlanMovil
 from core.models import GPXTrack, GPXPoint, TrackPoint
 
 
@@ -48,6 +48,24 @@ class RestauranteImageSerializer(serializers.ModelSerializer):
         fields = ('id', 'foto')
         read_only_fields = ('id',)
 
+class StorymapSerializer(GeoFeatureModelSerializer):
+    """ A class to serialize Storymap as GeoJSON compatible data """
+    geom = GeometryField(source='transformed')
+
+    class Meta:
+        model = Storymap
+        geo_field = "geom"
+        fields = ('id', 'nombre','tipo','descripcion','foto','user','geom')
+        read_only_Fields = ('id',)
+
+
+class StorymapImageSerializer(serializers.ModelSerializer):
+    """Serializer for uploading images to Storymap"""
+
+    class Meta:
+        model = Storymap
+        fields = ('id', 'foto')
+        read_only_fields = ('id',)
 
 class ReporteSerializer(GeoFeatureModelSerializer):
     """ A class to serialize Reporte as GeoJSON compatible data """
@@ -76,7 +94,13 @@ class PlanSerializer(serializers.ModelSerializer):
         fields = ('id', 'nombre', 'plan', 'foto', 'descripcion','shared')
         read_only_Fields = ('id',)
 
+class PlanMovilSerializer(serializers.ModelSerializer):
+    """ A class to serialize Plan Object"""
 
+    class Meta:
+        model = PlanMovil
+        fields = ('id', 'plan')
+        read_only_Fields = ('id',)
 
 
 '''

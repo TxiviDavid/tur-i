@@ -4,7 +4,7 @@ from rest_framework import viewsets, mixins, status,views
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from core.models import PuntoInteres, Restaurante, Reporte, Plan
+from core.models import PuntoInteres, Restaurante, Reporte, Plan, Storymap, PlanMovil
 from core.models import GPXTrack, GPXPoint, TrackPoint
 
 from recursos import serializers
@@ -14,13 +14,38 @@ from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.db.models.functions import Transform
 from django.apps import apps
 import requests,xmltodict, json
+from rest_framework import status,serializers as sr
+from rest_framework.exceptions import APIException
 
+class PlainValidationError(APIException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    default_detail = "Invalid input."
+    default_code = "invalid"
+
+    def __init__(self, detail=None, code=None):
+        if not isinstance(detail, dict):
+            raise sr.ValidationError("Invalid Input")
+        self.detail = detail
+
+#class MyAuthentication(TokenAuthentication):
+    #def authenticate_credentials(self, key):
+        #try:
+        #token = self.model.objects.select_related('user').get(key=key)
+        #except self.model.DoesNotExist:
+            # modify the original exception response
+            #raise exceptions.AuthenticationFailed('Custom error message')
+        #raise PlainValidationError({"status": 1,
+                #"message": "token is not valid",})
+
+        
+
+        
 
 class BaseRecursosAttrViewSet(viewsets.GenericViewSet,
                               mixins.ListModelMixin,
                               mixins.CreateModelMixin):
     """Base viewset for user owned recursos attributes"""
-    authentication_classes = (TokenAuthentication,)
+    authentication_classes = (TokenAuthentication,) #TokenAuthentication
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
@@ -154,6 +179,48 @@ class ReporteViewSet(BaseRecursosAttrViewSet):
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
+
+class StorymapViewSet(BaseRecursosAttrViewSet):
+    """Manage storympas in the database"""
+    queryset = Storymap.objects.annotate(transformed=Transform("geom", 4326))
+    serializer_class = serializers.StorymapSerializer
+
+    def get_serializer_class(self):
+        """Return appropriate serializer class"""
+        if self.action == 'upload_image':
+            return serializers.StorymapImageSerializer
+        return self.serializer_class
+
+    @action(methods=['POST'], detail=True, url_path='upload-image')
+    def upload_image(self, request, pk=None):
+        """Upload an image to a storymap"""
+        storymap = self.get_object()
+        serializer = self.get_serializer(
+            storymap,
+            data=request.data
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+class PlanMovilViewSet(viewsets.GenericViewSet,
+                              mixins.ListModelMixin,
+                              mixins.CreateModelMixin):
+    """Manage planMovil in the database"""
+    queryset = PlanMovil.objects.all()
+    serializer_class = serializers.PlanMovilSerializer
+    def get_queryset(self):
+        #"""Return objects for the current id"""
+        return self.queryset.filter(id=self.request.GET.get('id'))
 
 class PlanViewSet(BaseRecursosAttrViewSet):
     """Manage plan in the database"""
