@@ -28,7 +28,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 #DEBUG = True
 DEBUG = bool(int(os.environ.get('DEBUG',0)))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['www.gisgune.eus','gisgune.eus','137.74.192.116']
 ALLOWED_HOSTS.extend(
     filter(
         None,
