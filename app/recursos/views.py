@@ -4,7 +4,7 @@ from rest_framework import viewsets, mixins, status,views
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from core.models import PuntoInteres, Restaurante, Reporte, Plan, Storymap, PlanMovil, Region, Entrada, Interes
+from core.models import PuntoInteres, Restaurante, Reporte, Plan, Storymap, PlanMovil, Region, Entrada, Interes, Modo
 from core.models import GPXTrack, GPXPoint, TrackPoint
 
 from recursos import serializers
@@ -298,6 +298,16 @@ class InteresViewSet(viewsets.GenericViewSet,
                               mixins.CreateModelMixin):
     """Manage interes in the database"""
     queryset = Interes.objects.all()
+    serializer_class = serializers.InteresSerializer
+    def get_queryset(self):
+        #"""Return objects"""
+        return self.queryset
+
+class ModoViewSet(viewsets.GenericViewSet,
+                              mixins.ListModelMixin,
+                              mixins.CreateModelMixin):
+    """Manage modo in the database"""
+    queryset = Modo.objects.all()
     serializer_class = serializers.InteresSerializer
     def get_queryset(self):
         #"""Return objects"""

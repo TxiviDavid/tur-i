@@ -88,6 +88,13 @@ class InteresAdmin(admin.ModelAdmin):
     )
     list_per_page = 15
 
+class ModoAdmin(admin.ModelAdmin):
+    list_display = ['nombre']
+    list_filter = (
+        ('nombre'),
+    )
+    list_per_page = 15
+
 #esto es otro modo de anadir el modelo en el admin
 @admin.register(recursos_models.GPXFile)
 class FileAdmin(admin.ModelAdmin):
@@ -127,3 +134,4 @@ admin.site.register(recursos_models.PlanMovil, PlanMovilAdmin)
 admin.site.register(recursos_models.Region, RegionAdmin)
 admin.site.register(recursos_models.Entrada, EntradaAdmin)
 admin.site.register(recursos_models.Interes, InteresAdmin)
+admin.site.register(recursos_models.Modo, ModoAdmin)

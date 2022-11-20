@@ -32,20 +32,32 @@ def custom_exception_handler(exc, context):
                 response.data['status_code'] = response.status_code
                 response.data['reason'] = http.client.responses.get(response.status_code)
                 response.data['status'] = 5
+            elif "this field is required" in response.data['password'][0].lower():
+                response.data['status_code'] = response.status_code
+                response.data['reason'] = http.client.responses.get(response.status_code)
+                response.data['status'] = 6
         elif response.data.get('email'):        
             if "this field may not be blank" in response.data['email'][0].lower():
                 response.data['status_code'] = response.status_code
                 response.data['reason'] = http.client.responses.get(response.status_code)
-                response.data['status'] = 6
+                response.data['status'] = 7
             elif "enter a valid email address" in response.data['email'][0].lower():
                 response.data['status_code'] = response.status_code
                 response.data['reason'] = http.client.responses.get(response.status_code)
-                response.data['status'] = 7
+                response.data['status'] = 8
+            elif "this field is required" in response.data['email'][0].lower():
+                response.data['status_code'] = response.status_code
+                response.data['reason'] = http.client.responses.get(response.status_code)
+                response.data['status'] = 9
         elif response.data.get('name'):        
             if "this field may not be blank" in response.data['name'][0].lower():
                 response.data['status_code'] = response.status_code
                 response.data['reason'] = http.client.responses.get(response.status_code)
-                response.data['status'] = 8
+                response.data['status'] = 10
+            elif "this field is required" in response.data['name'][0].lower():
+                response.data['status_code'] = response.status_code
+                response.data['reason'] = http.client.responses.get(response.status_code)
+                response.data['status'] = 11
 
 
     return response

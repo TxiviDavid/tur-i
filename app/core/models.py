@@ -130,6 +130,16 @@ class Entrada(geoModels.Model):
     def __str__(self):
         return str(self.nombre)
 
+class Modo(models.Model):
+    nombre = models.CharField(max_length=100, blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Modo'
+        verbose_name_plural = 'Modos'
+
+    def __str__(self):
+        return str(self.nombre)
+
 class Interes(models.Model):
     nombre = models.CharField(max_length=100, blank=True, null=True)
 
