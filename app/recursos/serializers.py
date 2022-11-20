@@ -3,7 +3,7 @@ from rest_framework_gis.serializers import GeoFeatureModelSerializer,GeometrySer
 from rest_framework_gis.fields import GeometryField
 from django.contrib.gis.geos import Point
 
-from core.models import PuntoInteres, Restaurante, Reporte, PuntoInteresImage, Plan, Storymap, PlanMovil
+from core.models import PuntoInteres, Restaurante, Reporte, PuntoInteresImage, Plan, Storymap, PlanMovil, Region, Entrada, Interes
 from core.models import GPXTrack, GPXPoint, TrackPoint
 
 
@@ -18,7 +18,7 @@ class PuntoInteresSerializer(GeoFeatureModelSerializer):
         model = PuntoInteres
         depth = 1 #para devolver la tabla relacional
         geo_field = "geom"
-        fields = ('id', 'nombre','tipo','descripcion','observaciones','panorama360','tiempo','images','modelo3D','user','geom')
+        fields = ('id', 'nombre','tipo','descripcion','observaciones','panorama360','tiempo','images','modelo3D','user','geom','region')
         read_only_Fields = ('id',)
 
 class PuntoInteresImageSerializer(serializers.ModelSerializer):
@@ -102,7 +102,29 @@ class PlanMovilSerializer(serializers.ModelSerializer):
         fields = ('id', 'plan')
         read_only_Fields = ('id',)
 
+class RegionSerializer(serializers.ModelSerializer):
+    """A class to serialize Region Object"""
 
+    class Meta:
+        model = Region
+        fields = ('id', 'nombre', 'geom')
+        read_only_fields = ('id',)
+
+class EntradaSerializer(serializers.ModelSerializer):
+    """A class to serialize Entrada Object"""
+
+    class Meta:
+        model = Entrada
+        fields = ('id', 'nombre', 'region', 'geom')
+        read_only_fields = ('id',)
+
+class InteresSerializer(serializers.ModelSerializer):
+    """A class to serialize Interes Object"""
+
+    class Meta:
+        model = Interes
+        fields = ('id', 'nombre')
+        read_only_fields = ('id',)
 '''
 https://stackoverflow.com/questions/45532965/django-rest-framework-serializer-without-a-model
 class AlojamientoSerializer(serializers.Serializer):

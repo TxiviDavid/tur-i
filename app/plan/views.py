@@ -3,7 +3,7 @@ from rest_framework import viewsets, mixins, status,views
 import requests,xmltodict, json
 from rest_framework.response import Response
 from django.db.models import Q
-from core.models import PuntoInteres,PuntoInteresImage
+from core.models import PuntoInteres,PuntoInteresImage, Entrada
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.gdal import SpatialReference, CoordTransform
@@ -22,9 +22,9 @@ class PlanView(views.APIView):
         return Response(request)
 
     def post(self, request):
-
+        region = request.data['region']
         #estacion = request.data['estacion']
-        Entrada = request.data['entrada']
+        entrada = request.data['entrada']
         Gusto = request.data['interes']
         modo = request.data['modo']
         fechaLlegada = request.data['fechaLlegada']
@@ -99,20 +99,30 @@ class PlanView(views.APIView):
         except:
             existe = 'no existe'
 
+        q_object.add(Q(**{'region__id__contains': region}), Q.AND)
         # obtenemos el resultado de los filtros
         Filtros = PuntoInteres.objects.filter(q_object)
-        if Entrada == '1':
-            latitude = '42.904467'
-            longitud = '-1.822357'
-        elif Entrada ==  '2':
-            latitude = '42.935674'
-            longitud = '-1.828988'
-        elif Entrada == '3':
-            latitude = '42.865774'
-            longitud = '-2.240841'
-        elif Entrada == '4':
-            latitude = '42.932579'
-            longitud = '-2.228765'
+
+        entradaFilter = Entrada.objects.filter(id=entrada)
+        geometriaEntrada = list(entradaFilter.values('geom'))
+        if len(geometriaEntrada) > 0:
+            puntoEntrada = GEOSGeometry(
+                'POINT(' + str(geometriaEntrada[0]['geom'].x) + ' ' + str(geometriaEntrada[0]['geom'].y) + ')')
+            longitud = str(puntoEntrada.x)
+            latitude = str(puntoEntrada.y)
+
+        #if entrada == '1':
+            #latitude = '42.904467'
+            #longitud = '-1.822357'
+        #elif entrada ==  '2':
+            #latitude = '42.935674'
+            #longitud = '-1.828988'
+        #elif entrada == '3':
+            #latitude = '42.865774'
+            #longitud = '-2.240841'
+        #elif entrada == '4':
+            #latitude = '42.932579'
+            #longitud = '-2.228765'
         puntoInicio = GEOSGeometry('POINT(' + longitud + ' ' + latitude + ')')
         gcoord = SpatialReference(4326)
         mycoord = SpatialReference(25830)

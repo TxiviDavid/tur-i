@@ -107,6 +107,39 @@ class StorymapsType(models.TextChoices):
     MUSICA = 'MUSICA', 'Musica'
     DEPORTE = 'DEPORTE', 'Deporte'
 
+class Region(geoModels.Model):
+    nombre = models.CharField(max_length=100, blank=True, null=True)
+    geom = geoModels.PolygonField(srid=4326, blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Región'
+        verbose_name_plural = 'Regiones'
+
+    def __str__(self):
+        return str(self.nombre)
+
+class Entrada(geoModels.Model):
+    nombre = models.CharField(max_length=100, blank=True, null=True)
+    region = models.ManyToManyField(Region)
+    geom = geoModels.PointField(srid=4326, blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Entrada'
+        verbose_name_plural = 'Entradas'
+
+    def __str__(self):
+        return str(self.nombre)
+
+class Interes(models.Model):
+    nombre = models.CharField(max_length=100, blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Interés'
+        verbose_name_plural = 'Intereses'
+
+    def __str__(self):
+        return str(self.nombre)
+
 class PuntoInteres(geoModels.Model):
     nombre = models.CharField("Nombre", max_length=50, null=False, blank=False)
     tipo = models.CharField(choices=Tipo.choices, max_length=50,
@@ -126,6 +159,7 @@ class PuntoInteres(geoModels.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE
     )
+    region = models.ForeignKey(Region,on_delete=models.CASCADE)
     # objects = models.GeoManager()
 
     class Meta:

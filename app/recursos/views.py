@@ -4,7 +4,7 @@ from rest_framework import viewsets, mixins, status,views
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from core.models import PuntoInteres, Restaurante, Reporte, Plan, Storymap, PlanMovil
+from core.models import PuntoInteres, Restaurante, Reporte, Plan, Storymap, PlanMovil, Region, Entrada, Interes
 from core.models import GPXTrack, GPXPoint, TrackPoint
 
 from recursos import serializers
@@ -272,6 +272,36 @@ class PlanViewSet(BaseRecursosAttrViewSet):
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
+
+class RegionViewSet(viewsets.GenericViewSet,
+                              mixins.ListModelMixin,
+                              mixins.CreateModelMixin):
+    """Manage region in the database"""
+    queryset = Region.objects.all()
+    serializer_class = serializers.RegionSerializer
+    def get_queryset(self):
+        #"""Return objects"""
+        return self.queryset
+
+class EntradaViewSet(viewsets.GenericViewSet,
+                              mixins.ListModelMixin,
+                              mixins.CreateModelMixin):
+    """Manage entrada in the database"""
+    queryset = Entrada.objects.all()
+    serializer_class = serializers.EntradaSerializer
+    def get_queryset(self):
+        #"""Return objects"""
+        return self.queryset.filter(region=self.request.GET.get('regionId'))
+
+class InteresViewSet(viewsets.GenericViewSet,
+                              mixins.ListModelMixin,
+                              mixins.CreateModelMixin):
+    """Manage interes in the database"""
+    queryset = Interes.objects.all()
+    serializer_class = serializers.InteresSerializer
+    def get_queryset(self):
+        #"""Return objects"""
+        return self.queryset
 
 class AlojamientoView(views.APIView):
     def get(self, request):
