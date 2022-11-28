@@ -272,26 +272,44 @@ class PlanViewSet(BaseRecursosAttrViewSet):
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
-
-class RegionViewSet(viewsets.GenericViewSet,
+#https://docs.djangoproject.com/en/4.1/ref/contrib/gis/layermapping/#layermapping-api
+class RegionesGeoJSONViewSet(viewsets.GenericViewSet,
                               mixins.ListModelMixin,
                               mixins.CreateModelMixin):
+    """Manage regiones as geojson in the database"""
+    queryset = Region.objects.annotate(transformed=Transform("geom", 4326))
+    serializer_class = serializers.RegionGeoJSONSerializer
+
+
+class RegionView(views.APIView):
     """Manage region in the database"""
-    queryset = Region.objects.all()
-    serializer_class = serializers.RegionSerializer
-    def get_queryset(self):
-        #"""Return objects"""
-        return self.queryset
+
+    def get(self, request, **kwargs):
+        my_data = Region.objects.all()
+        serializer = self.get_serializer('first',my_data)
+        return Response({"regiones":serializer.data})
+
+
+    def get_serializer(self,type,data):
+        my_serializers = {
+        'first':serializers.RegionSerializer(data,many=True),
+        }
+        return my_serializers[type]
+
+#https://stackoverflow.com/questions/48506898/what-are-the-differences-between-generics-views-viewsets-and-mixins-in-django
 
 class EntradaViewSet(viewsets.GenericViewSet,
                               mixins.ListModelMixin,
                               mixins.CreateModelMixin):
     """Manage entrada in the database"""
     queryset = Entrada.objects.all()
-    serializer_class = serializers.EntradaSerializer
     def get_queryset(self):
         #"""Return objects"""
         return self.queryset.filter(region=self.request.GET.get('regionId'))
+
+    def list(self, request):
+        serializer = serializers.EntradaSerializer(self.get_queryset(), many=True)
+        return Response({"entradas":serializer.data})
 
 class InteresViewSet(viewsets.GenericViewSet,
                               mixins.ListModelMixin,
@@ -303,6 +321,10 @@ class InteresViewSet(viewsets.GenericViewSet,
         #"""Return objects"""
         return self.queryset
 
+    def list(self, request):
+        serializer = self.serializer_class(self.get_queryset(), many=True)
+        return Response({"intereses":serializer.data})
+
 class ModoViewSet(viewsets.GenericViewSet,
                               mixins.ListModelMixin,
                               mixins.CreateModelMixin):
@@ -312,6 +334,10 @@ class ModoViewSet(viewsets.GenericViewSet,
     def get_queryset(self):
         #"""Return objects"""
         return self.queryset
+
+    def list(self, request):
+        serializer = self.serializer_class(self.get_queryset(), many=True)
+        return Response({"modos":serializer.data})
 
 class AlojamientoView(views.APIView):
     def get(self, request):

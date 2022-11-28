@@ -102,6 +102,17 @@ class PlanMovilSerializer(serializers.ModelSerializer):
         fields = ('id', 'plan')
         read_only_Fields = ('id',)
 
+class RegionGeoJSONSerializer(GeoFeatureModelSerializer):
+    """A class to serialize Region Object as geojson"""
+    geom = GeometryField(source='transformed')
+    #items = serializers.RelatedField(source='image',read_only=True)
+
+    class Meta:
+        model = Region
+        geo_field = "geom"
+        fields = ('id', 'nombre', 'geom')
+        read_only_Fields = ('id',)
+
 class RegionSerializer(serializers.ModelSerializer):
     """A class to serialize Region Object"""
 

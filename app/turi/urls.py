@@ -34,6 +34,7 @@ urlpatterns = [
     path('api/recursos/', include('recursos.urls')),
     path('api/recursos/alojamientos/', views.AlojamientoView.as_view()),
     path('api/recursos/dominios/', views.DominiosView.as_view()),
+    path('api/recursos/regiones/', views.RegionView.as_view()),
     path('api/plan/', PlanView.as_view()),
     path('api/planMovil/', PlanMovilView.as_view()),
     path('api/route/', RouteView.as_view()),
