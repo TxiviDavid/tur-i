@@ -238,6 +238,7 @@ class PlanView(views.APIView):
         descipcionRecursosPlan = descipcionRecursos
         diasPlan = dias
         plan = []
+        planMovil = []
 
         html = ''
         #html += '<div role="tabpanel" class="tab-pane active" id="homePlan">'
@@ -273,6 +274,7 @@ class PlanView(views.APIView):
                         except:
                             acumulacionTiempo = 0
                         itemsPlan = []
+                        itemsPlanMovil = []
                         for index,tiempo in enumerate(tiempos):
                             tiempoRecurso = tiempo.get('tiempo')
                             if acumulacionTiempo <= horasPrimerDia:
@@ -322,10 +324,12 @@ class PlanView(views.APIView):
                                 html += '</div>'
                                 html += '</div>'
                                 html += '<div class="line-between"></div>'
-                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}])
+                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}, None])
+                                itemsPlanMovil.append({"index":recursoIndex,"travel_duration":int(duracion),"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": float(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": recursoIndex,"note":None})
                                 recursoIndex = recursoIndex + 1
                         html += '</div>'
                         plan.append({str(fechaLlegadaSinHora):itemsPlan})
+                        planMovil.append({"date":str(fechaLlegadaSinHora),"points":itemsPlanMovil})
                         #eliminamos los recursos que ya hemos usado
                         del imagenesRecursos[0:recursos]
                         del tiempos[0:recursos]
@@ -354,6 +358,7 @@ class PlanView(views.APIView):
                         except:
                             acumulacionTiempo = 0
                         itemsPlan = []
+                        itemsPlanMovil = []
                         for index, tiempo in enumerate(tiempos):
                             tiempoRecurso = tiempo.get('tiempo')
                             if acumulacionTiempo <= horasPrimerDia:
@@ -405,10 +410,12 @@ class PlanView(views.APIView):
                                 html += '</div>'
                                 html += '</div>'
                                 html += '<div class="line-between"></div>'
-                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}])
+                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}, None])
+                                itemsPlanMovil.append({"index":recursoIndex,"travel_duration":int(duracion),"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": float(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": recursoIndex,"note":None})
                                 recursoIndex = recursoIndex + 1
                         html += '</div>'
                         plan.append({str(fechaLlegadaSinHora):itemsPlan})
+                        planMovil.append({"date":str(fechaLlegadaSinHora),"points":itemsPlanMovil})
                         # eliminamos los recursos que ya hemos usado
                         del imagenesRecursos[0:recursos]
                         del tiempos[0:recursos]
@@ -448,6 +455,7 @@ class PlanView(views.APIView):
                         except:
                             acumulacionTiempo = 0
                         itemsPlan = []
+                        itemsPlanMovil = []
                         for index, tiempo in enumerate(tiempos):
                             tiempoRecurso = tiempo.get('tiempo')
                             if acumulacionTiempo <= horasDiarias:
@@ -499,10 +507,12 @@ class PlanView(views.APIView):
                                 html += '</div>'
                                 html += '</div>'
                                 html += '<div class="line-between"></div>'
-                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}])
+                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}, None])
+                                itemsPlanMovil.append({"index":recursoIndex,"travel_duration":int(duracion),"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": float(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": recursoIndex,"note":None})
                                 recursoIndex = recursoIndex + 1
                         html += '</div>'
                         plan.append({str(fechaSiguienteSinHora):itemsPlan})
+                        planMovil.append({"date":str(fechaLlegadaSinHora),"points":itemsPlanMovil})
                         # eliminamos los recursos que ya hemos usado
                         del imagenesRecursos[0:recursos]
                         del tiempos[0:recursos]
@@ -529,6 +539,7 @@ class PlanView(views.APIView):
                         except:
                             acumulacionTiempo = 0
                         itemsPlan = []
+                        itemsPlanMovil = []
                         for index, tiempo in enumerate(tiempos):
                             tiempoRecurso = tiempo.get('tiempo')
                             if acumulacionTiempo <= horasDiarias:
@@ -580,10 +591,12 @@ class PlanView(views.APIView):
                                 html += '</div>'
                                 html += '</div>'
                                 html += '<div class="line-between"></div>'
-                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}])
+                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}, None])
+                                itemsPlanMovil.append({"index":recursoIndex,"travel_duration":int(duracion),"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": float(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": recursoIndex,"note":None})
                                 recursoIndex = recursoIndex + 1
                         html += '</div>'
                         plan.append({str(fechaSiguienteSinHora):itemsPlan})
+                        planMovil.append({"date":str(fechaLlegadaSinHora),"points":itemsPlanMovil})
                         # eliminamos los recursos que ya hemos usado
                         del imagenesRecursos[0:recursos]
                         del tiempos[0:recursos]
@@ -623,6 +636,7 @@ class PlanView(views.APIView):
                             except:
                                 acumulacionTiempo = 0
                             itemsPlan = []
+                            itemsPlanMovil = []
                             for index, tiempo in enumerate(tiempos):
                                 tiempoRecurso = tiempo.get('tiempo')
                                 if acumulacionTiempo <= horasDiarias:
@@ -674,10 +688,12 @@ class PlanView(views.APIView):
                                     html += '</div>'
                                     html += '</div>'
                                     html += '<div class="line-between"></div>'
-                                    itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}])
+                                    itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}, None])
+                                    itemsPlanMovil.append({"index":recursoIndex,"travel_duration":int(duracion),"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": float(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": recursoIndex,"note":None})
                                     recursoIndex = recursoIndex + 1
                             html += '</div>'
                             plan.append({str(fechaSiguienteSinHora):itemsPlan})
+                            planMovil.append({"date":str(fechaLlegadaSinHora),"points":itemsPlanMovil})
                             # eliminamos los recursos que ya hemos usado
                             del imagenesRecursos[0:recursos]
                             del tiempos[0:recursos]
@@ -705,6 +721,7 @@ class PlanView(views.APIView):
                             except:
                                 acumulacionTiempo = 0
                             itemsPlan = []
+                            itemsPlanMovil = []
                             for index, tiempo in enumerate(tiempos):
                                 tiempoRecurso = tiempo.get('tiempo')
                                 if acumulacionTiempo <= horasDiarias:
@@ -756,10 +773,12 @@ class PlanView(views.APIView):
                                     html += '</div>'
                                     html += '</div>'
                                     html += '<div class="line-between"></div>'
-                                    itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}])
+                                    itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}, None])
+                                    itemsPlanMovil.append({"index":recursoIndex,"travel_duration":int(duracion),"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": float(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": recursoIndex,"note":None})
                                     recursoIndex = recursoIndex + 1
                             html += '</div>'
                             plan.append({str(fechaSiguienteSinHora):itemsPlan})
+                            planMovil.append({"date":str(fechaLlegadaSinHora),"points":itemsPlanMovil})
                             # eliminamos los recursos que ya hemos usado
                             del imagenesRecursos[0:recursos]
                             del tiempos[0:recursos]
@@ -782,6 +801,7 @@ class PlanView(views.APIView):
             'recursos':recursos_arr,
             'recursosNombres':recursosNombres_arr,
             'plan':plan,
+            'planMovil':planMovil,
             'recursosIds':resursosIds_arr
         }
         return Response(context, status=status.HTTP_200_OK)

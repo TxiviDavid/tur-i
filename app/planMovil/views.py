@@ -15,14 +15,14 @@ from django.core.serializers.json import DjangoJSONEncoder
 from dateutil.relativedelta import relativedelta
 from django.utils.datetime_safe import datetime,date,strftime,new_date
 from django.utils.dateformat import format
-from core.models import PlanMovil
+from core.models import PlanMovil, Plan
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 # Create your views here.
 
 class PlanMovilView(views.APIView):
-    authentication_classes = (TokenAuthentication,) #TokenAuthentication
-    permission_classes = (IsAuthenticated,)
+    #authentication_classes = (TokenAuthentication,) #TokenAuthentication
+    #permission_classes = (IsAuthenticated,)
 
     def get(self, request):
         return Response(request)
@@ -330,8 +330,8 @@ class PlanMovilView(views.APIView):
                                 html += '</div>'
                                 html += '</div>'
                                 html += '<div class="line-between"></div>'
-                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}])
-                                itemsPlanMovil.append({"index":str(recursoIndex),"travel_duration":duracion,"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": str(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": str(recursoIndex)})
+                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}, None])
+                                itemsPlanMovil.append({"index":recursoIndex,"travel_duration":+int(duracion),"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": float(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": recursoIndex,"note":None})
                                 recursoIndex = recursoIndex + 1
                         html += '</div>'
                         plan.append({str(fechaLlegadaSinHora):itemsPlan})
@@ -416,8 +416,8 @@ class PlanMovilView(views.APIView):
                                 html += '</div>'
                                 html += '</div>'
                                 html += '<div class="line-between"></div>'
-                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}])
-                                itemsPlanMovil.append({"index":str(recursoIndex),"travel_duration":duracion,"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": str(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": str(recursoIndex)})
+                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}, None])
+                                itemsPlanMovil.append({"index":recursoIndex,"travel_duration":int(duracion),"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": float(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": recursoIndex,"note":None})
                                 recursoIndex = recursoIndex + 1
                         html += '</div>'
                         plan.append({str(fechaLlegadaSinHora):itemsPlan})
@@ -513,8 +513,8 @@ class PlanMovilView(views.APIView):
                                 html += '</div>'
                                 html += '</div>'
                                 html += '<div class="line-between"></div>'
-                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}])
-                                itemsPlanMovil.append({"index":str(recursoIndex),"travel_duration":duracion,"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": str(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": str(recursoIndex)})
+                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}, None])
+                                itemsPlanMovil.append({"index":recursoIndex,"travel_duration":int(duracion),"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": float(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": recursoIndex,"note":None})
                                 recursoIndex = recursoIndex + 1
                         html += '</div>'
                         plan.append({str(fechaSiguienteSinHora):itemsPlan})
@@ -597,8 +597,8 @@ class PlanMovilView(views.APIView):
                                 html += '</div>'
                                 html += '</div>'
                                 html += '<div class="line-between"></div>'
-                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}])
-                                itemsPlanMovil.append({"index":str(recursoIndex),"travel_duration":duracion,"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": str(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": str(recursoIndex)})
+                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}, None])
+                                itemsPlanMovil.append({"index":recursoIndex,"travel_duration":int(duracion),"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": float(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": recursoIndex,"note":None})
                                 recursoIndex = recursoIndex + 1
                         html += '</div>'
                         plan.append({str(fechaSiguienteSinHora):itemsPlan})
@@ -694,8 +694,8 @@ class PlanMovilView(views.APIView):
                                     html += '</div>'
                                     html += '</div>'
                                     html += '<div class="line-between"></div>'
-                                    itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}])
-                                    itemsPlanMovil.append({"index":str(recursoIndex),"travel_duration":duracion,"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": str(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": str(recursoIndex)})
+                                    itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}, None])
+                                    itemsPlanMovil.append({"index":recursoIndex,"travel_duration":int(duracion),"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": float(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": recursoIndex,"note":None})
                                     recursoIndex = recursoIndex + 1
                             html += '</div>'
                             plan.append({str(fechaSiguienteSinHora):itemsPlan})
@@ -779,8 +779,8 @@ class PlanMovilView(views.APIView):
                                     html += '</div>'
                                     html += '</div>'
                                     html += '<div class="line-between"></div>'
-                                    itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}])
-                                    itemsPlanMovil.append({"index":str(recursoIndex),"travel_duration":duracion,"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": str(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": str(recursoIndex)})
+                                    itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}, None])
+                                    itemsPlanMovil.append({"index":recursoIndex,"travel_duration":int(duracion),"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": float(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": recursoIndex,"note":None})
                                     recursoIndex = recursoIndex + 1
                             html += '</div>'
                             plan.append({str(fechaSiguienteSinHora):itemsPlan})
@@ -802,8 +802,8 @@ class PlanMovilView(views.APIView):
         recursosNombres_arr = json.dumps(recursosNombres_arr, cls=DjangoJSONEncoder)
 
         new_plan = PlanMovil()
-        new_plan.plan = {'plan': plan, 'data':geojson, 'dataProperties': geojsonProperties, 'recursos':recursos_arr, 'recursosNombres':recursosNombres_arr,'recursosIds':resursosIds_arr }
-        new_plan.user = request.user
+        new_plan.plan = {'plan': plan, 'planMovil': planMovil, 'data':geojson, 'dataProperties': geojsonProperties, 'recursos':recursos_arr, 'recursosNombres':recursosNombres_arr,'recursosIds':resursosIds_arr }
+        #new_plan.user = request.user
         new_plan.save()
 
         context = {
@@ -821,3 +821,122 @@ class PlanMovilView(views.APIView):
         }
         return Response(context, status=status.HTTP_200_OK)
 
+
+class MovePoiPlanView(views.APIView):
+    def post(self, request):
+        id = request.data['id']
+        save = request.data['save']
+        date = request.data['date']
+        previousIndex = request.data['previousIndex']
+        currentIndex = request.data['currentIndex']
+
+        if (request.data['save']) == 'True' or (request.data['save']) == 'true':
+            queryset = Plan.objects.get(id=request.data['id'])
+        else:
+            queryset = PlanMovil.objects.get(id=request.data['id'])
+        planField = queryset.plan
+
+        #cambiamos plan y lo devolvemos
+
+        context = {
+            'planMovil': planField['planMovil'],
+            'id': id,
+            'url': 'https://tur-i-app.web.app/planmovil/' + str(id),
+            'save': False
+        }
+        return Response(context, status=status.HTTP_200_OK)
+
+class DeletePoiPlanView(views.APIView):
+    def post(self, request):
+        id = request.data['id']
+        save = request.data['save']
+        date = request.data['date']
+        previousIndex = request.data['previousIndex']
+
+        if (request.data['save']) == 'True' or (request.data['save']) == 'true':
+            queryset = Plan.objects.get(id=request.data['id'])
+        else:
+            queryset = PlanMovil.objects.get(id=request.data['id'])
+        planField = queryset.plan
+
+        #cambiamos plan y lo devolvemos
+
+        context = {
+            'planMovil': planField['planMovil'],
+            'id': id,
+            'url': 'https://tur-i-app.web.app/planmovil/' + str(id),
+            'save': False
+        }
+        return Response(context, status=status.HTTP_200_OK)
+
+class CommentPoiPlanView(views.APIView):
+    def post(self, request):
+        id = request.data['id']
+        save = request.data['save']
+        date = request.data['date']
+        currentIndex = request.data['currentIndex']
+        note = request.data['note']
+
+        if (request.data['save']) == 'True' or (request.data['save']) == 'true':
+            queryset = Plan.objects.get(id=request.data['id'])
+        else:
+            queryset = PlanMovil.objects.get(id=request.data['id'])
+        planField = queryset.plan
+
+        #cambiamos plan y lo devolvemos
+
+        context = {
+            'planMovil': planField['planMovil'],
+            'id': id,
+            'url': 'https://tur-i-app.web.app/planmovil/' + str(id),
+            'save': False
+        }
+        return Response(context, status=status.HTTP_200_OK)
+
+class ReviewPoiPlanView(views.APIView):
+    def post(self, request):
+        id = request.data['id']
+        save = request.data['save']
+        date = request.data['date']
+        currentIndex = request.data['currentIndex']
+        pointsReview = request.data['pointsReview']
+        commentReview = request.data['commentReview']
+
+        if (request.data['save']) == 'True' or (request.data['save']) == 'true':
+            queryset = Plan.objects.get(id=request.data['id'])
+        else:
+            queryset = PlanMovil.objects.get(id=request.data['id'])
+        planField = queryset.plan
+
+        #cambiamos plan y lo devolvemos
+
+        context = {
+            'planMovil': planField['planMovil'],
+            'id': id,
+            'url': 'https://tur-i-app.web.app/planmovil/' + str(id),
+            'save': False
+        }
+        return Response(context, status=status.HTTP_200_OK)
+
+
+class SavePlanView(views.APIView):
+    authentication_classes = (TokenAuthentication,) #TokenAuthentication
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        id = request.data['id']
+        name = request.data['name']
+        description = request.data['description']
+
+        queryset = PlanMovil.objects.get(id=request.data['id'])
+        planField = queryset.plan
+
+        new_plan = Plan()
+        new_plan.nombre = name
+        new_plan.descripcion = description
+        new_plan.plan = queryset.plan
+        new_plan.user = request.user
+        new_plan.save()
+
+        context = {"id": new_plan.id, "save": True}
+        return Response(context, status=status.HTTP_200_OK)

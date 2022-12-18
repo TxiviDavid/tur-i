@@ -297,7 +297,8 @@ class PlanMovil(geoModels.Model):
     modificationDate = models.DateTimeField(default=now, blank=False)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        blank=True, null=True
     )
 
     class Meta:
