@@ -18,6 +18,9 @@ from django.utils.dateformat import format
 from core.models import PlanMovil, Plan
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import APIException
+import uuid
+import os
 # Create your views here.
 
 class PlanMovilView(views.APIView):
@@ -105,7 +108,7 @@ class PlanMovilView(views.APIView):
         except:
             existe = 'no existe'
 
-        q_object.add(Q(**{'region__id__contains': region}), Q.AND)
+        q_object.add(Q(**{'subregion__id__contains': region}), Q.AND)
         # obtenemos el resultado de los filtros
         Filtros = PuntoInteres.objects.filter(q_object)
 
@@ -145,7 +148,7 @@ class PlanMovilView(views.APIView):
             contador = 0
             for imagenPunto in imagenesPunto:
                 #if contador==0:
-                    foto = str(imagenPunto.image.name)
+                    foto =  self.request.build_absolute_uri('/').strip("/") + str(imagenPunto.image.url)
                     imagenes.append(foto)
                     contador +=1
 
@@ -198,438 +201,342 @@ class PlanMovilView(views.APIView):
                           'preference': 'shortest',
 
                           'instructions': 'true', }
-        route_normal = client.directions(**request_params)
-        dataJson = route_normal['features'][0]['geometry']
-        geojson = json.dumps(dataJson, cls=DjangoJSONEncoder)
-        geojsonProperties = route_normal['features'][0]['properties']
-        duracion_total_horas = 20
-        #duracion_total_horas = route_normal['features'][0]['properties']['summary']['duration'] / 3600.00
-        # Round a number to the closest half integer.
-        duracion_total_horas_rounded = 0.5 * math.ceil(2.0 * duracion_total_horas)
-        duracionSegmentos = list()
-        segmentos =  route_normal['features'][0]['properties']['segments']
-        for segmento in segmentos:
-            duracion = round(segmento['duration']/3600,2)
-            duracionSegmentos.append(duracion)
-        duracionIndex = 0
+        if len(recursos_arr) > 1:
+            route_normal = client.directions(**request_params)
+            dataJson = route_normal['features'][0]['geometry']
+            geojson = json.dumps(dataJson, cls=DjangoJSONEncoder)
+            geojsonProperties = route_normal['features'][0]['properties']
+            duracion_total_horas = 20
+            #duracion_total_horas = route_normal['features'][0]['properties']['summary']['duration'] / 3600.00
+            # Round a number to the closest half integer.
+            duracion_total_horas_rounded = 0.5 * math.ceil(2.0 * duracion_total_horas)
+            duracionSegmentos = list()
+            segmentos =  route_normal['features'][0]['properties']['segments']
+            for segmento in segmentos:
+                duracion = round(segmento['duration']/3600,2)
+                duracionSegmentos.append(duracion)
+            duracionIndex = 0
 
 
-        #PLANNING
-        fechaLlegada = fechaLlegada.split('-')
-        fechaSalida =  fechaSalida.split('-')
-        diaLlegada = int(fechaLlegada[2])
-        mesLlegada = int(fechaLlegada[1])
-        anoLlegada = int(fechaLlegada[0])
-        diaSalida = int(fechaSalida[2])
-        mesSalida = int(fechaSalida[1])
-        anoSalida = int(fechaSalida[0])
+            #PLANNING
+            fechaLlegada = fechaLlegada.split('-')
+            fechaSalida =  fechaSalida.split('-')
+            diaLlegada = int(fechaLlegada[2])
+            mesLlegada = int(fechaLlegada[1])
+            anoLlegada = int(fechaLlegada[0])
+            diaSalida = int(fechaSalida[2])
+            mesSalida = int(fechaSalida[1])
+            anoSalida = int(fechaSalida[0])
 
 
-        fechaLlegada = datetime(anoLlegada, mesLlegada, diaLlegada,Llegada)
-        fechaSalida = datetime(anoSalida, mesSalida, diaSalida,Salida)
-        fechaLlegadaSinHora = date(anoLlegada, mesLlegada, diaLlegada)
-        fechaSalidaSinHora = date(anoSalida, mesSalida, diaSalida)
-        fechaSiguienteSinHora = date(anoLlegada, mesLlegada, diaLlegada)
-        numeroDias = fechaSalidaSinHora - fechaLlegadaSinHora
-        numeroDias = numeroDias.days +1
-        diff = fechaSalida - fechaLlegada
-        dias = diff.days
-        horasDiarias = Final - Inicial
+            fechaLlegada = datetime(anoLlegada, mesLlegada, diaLlegada,Llegada)
+            fechaSalida = datetime(anoSalida, mesSalida, diaSalida,Salida)
+            fechaLlegadaSinHora = date(anoLlegada, mesLlegada, diaLlegada)
+            fechaSalidaSinHora = date(anoSalida, mesSalida, diaSalida)
+            fechaSiguienteSinHora = date(anoLlegada, mesLlegada, diaLlegada)
+            numeroDias = fechaSalidaSinHora - fechaLlegadaSinHora
+            numeroDias = numeroDias.days +1
+            diff = fechaSalida - fechaLlegada
+            dias = diff.days
+            horasDiarias = Final - Inicial
 
-        horasUtiles = 0
-        recursoIndex = 1
-        imagenesPlan = imagenesRecursos
-        tiemposPlan = tiempos
-        nombreRecursosPlan = nombreRecursos
-        descipcionRecursosPlan = descipcionRecursos
-        diasPlan = dias
-        plan = []
-        planMovil = []
+            horasUtiles = 0
+            recursoIndex = 1
+            imagenesPlan = imagenesRecursos
+            tiemposPlan = tiempos
+            nombreRecursosPlan = nombreRecursos
+            descipcionRecursosPlan = descipcionRecursos
+            diasPlan = dias
+            plan = []
+            planMovil = []
 
-        html = ''
-        #html += '<div role="tabpanel" class="tab-pane active" id="homePlan">'
-        html += '<div id="mainPanelItinerario">'
-        html += '<div id="diaPorDia">'
-        if dias >= 0:
-            if horasDiarias > 0:
-                # preparamos el html de la tabla de los resultados
-                html += '<div>'
-                horasPrimerDia = 0
-                if Final < Llegada:
+            html = ''
+            #html += '<div role="tabpanel" class="tab-pane active" id="homePlan">'
+            html += '<div id="mainPanelItinerario">'
+            html += '<div id="diaPorDia">'
+            if dias >= 0:
+                if horasDiarias > 0:
+                    # preparamos el html de la tabla de los resultados
+                    html += '<div>'
                     horasPrimerDia = 0
-                else:
-                    mismoDia = fechaLlegada + relativedelta(hour=Final)
-                    horasPrimerDia = Final - Llegada
-                    comprobarUltimoDia = fechaSalidaSinHora - fechaLlegadaSinHora
-                    if comprobarUltimoDia.days <= 0:
-                        horasPrimerDia = diff.seconds
-                        horasPrimerDia = horasPrimerDia / 3600
-                        print('inicio: '+ str(fechaLlegada))
-                        for i in range(horasPrimerDia):
-                            horasUtiles+=1
-                            print(fechaLlegada + relativedelta(hours=+(i + 1)))
-                        print('Horas dia 1:' +str(horasPrimerDia))
-                        html += '<div class="dayBlock">'
-                        html += '<div class="dia-container">'
-                        html += '<p class="font-weight-bold dark-grey-text">'+str(fechaLlegadaSinHora)+'</p><hr class="my-5">'
-                        html += '</div>'
-                        acumulacionTiempo = 0
-                        recursos = 0
-                        try:
-                            acumulacionTiempo = acumulacionTiempo + Decimal(duracionSegmentos[duracionIndex])
-                        except:
-                            acumulacionTiempo = 0
-                        itemsPlan = []
-                        itemsPlanMovil = []
-                        for index,tiempo in enumerate(tiempos):
-                            tiempoRecurso = tiempo.get('tiempo')
-                            if acumulacionTiempo <= horasPrimerDia:
-                                recursos+=1
-                                nombreRecurso = nombreRecursos[index].get('nombre')
-                                descipcionRecurso = descipcionRecursos[index].get('descripcion')
-                                tipoRecurso = tipoRecursos[index].get('tipo')
-                                observacionesRecurso = observacionesRecursos[index].get('observaciones')
-                                fotosRecurso = fotosRecursos[index].get('images')
-                                html += '<div class="itinerarioRuta">'
-                                html += '<div class="left-col-ruta"></div>'
-                                html += '<div class="right-col-ruta">'
-                                duracion = '0'
-                                try:
-                                    duracion = str(int(duracionSegmentos[duracionIndex] * 60))
-                                    html += '<span class="travel-time"><i class="fa fa-car" aria-hidden="true"></i>  ' + str(
-                                        int(duracionSegmentos[duracionIndex] * 60)) + ' minutos</span>'
-                                except:
-                                    html += ''
-                                html += '</div>'
-                                html += '</div>'
-                                html += '<div class="itinerario">'
-                                html += '<div class="contenidoVisita">'
-                                html += '<div class="left-col">'
-                                hora=fechaLlegada + relativedelta(hours=+float(acumulacionTiempo))
-                                horaConDesplazamiento = hora + relativedelta(minutes=+int(duracionSegmentos[duracionIndex]))
-
-                                duracionIndex+=1
-                                try:
-                                    acumulacionTiempo = tiempoRecurso + acumulacionTiempo + Decimal(duracionSegmentos[duracionIndex])
-                                except:
-                                    acumulacionTiempo = 0
-                                html += '<p class="font-weight-bold dark-grey-text"><mdb-icon far icon="clock" class="pr-2"</mdb-icon> ' + str(horaConDesplazamiento.time()) + '</p>'
-                                html += '</div>'
-                                html += '<div class="row">'
-                                html += '<div class="col-lg-5">'
-                                html += '<div class="view overlay rounded z-depth-2 mb-lg-0 mb-4 waves-light" mdbWavesEffect><img class="img-fluid" src="https://mdbootstrap.com/img/Photos/Others/img (28).jpg"/></div>'
-                                html += '</div>'
-                                html += '<div class="col-lg-7">'
-                                html += '<a href="#!" class="indigo-text"><h6 class="font-weight-bold mb-3"><mdb-icon fas icon="suitcase" class="pr-2"></mdb-icon>Travels</h6></a>'
-                                html += '<h3 class="font-weight-bold mb-3"><strong>' + nombreRecurso + '</strong></h3>'
-                                html += '<p>' + descipcionRecurso + '</p>'
-                                html += '<p><strong>Tiempo de visita estimado:</strong> ' + str(tiempoRecurso) + ' h</p>'
-                                html += '<button type="button" mdbBtn color="primary" mdbWavesEffect>Primary</button>'
-                                html += '</div>'
-                                html += '</div>'
-                                html += '</div>'
-                                html += '</div>'
-                                html += '<div class="line-between"></div>'
-                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}, None])
-                                itemsPlanMovil.append({"index":recursoIndex,"travel_duration":+int(duracion),"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": float(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": recursoIndex,"note":None})
-                                recursoIndex = recursoIndex + 1
-                        html += '</div>'
-                        plan.append({str(fechaLlegadaSinHora):itemsPlan})
-                        planMovil.append({"date":str(fechaLlegadaSinHora),"points":itemsPlanMovil})
-                        #eliminamos los recursos que ya hemos usado
-                        del imagenesRecursos[0:recursos]
-                        del tiempos[0:recursos]
-                        del nombreRecursos[0:recursos]
-                        del descipcionRecursos[0:recursos]
-                        del tipoRecursos[0:recursos]
-                        del observacionesRecursos[0:recursos]
-                        del fotosRecursos[0:recursos]
-                        print('fin')
-
+                    if Final < Llegada:
+                        horasPrimerDia = 0
                     else:
-                        print('inicio: '+str(fechaLlegada))
-                        for i in range(horasPrimerDia):
-                            horasUtiles +=1
-                            print(fechaLlegada + relativedelta(hours=+(i+1)))
-                        print('Horas dia 1:'+ str(horasPrimerDia))
-                        html += '<div class="dayBlock">'
-                        html += '<div class="dia-container">'
-                        html += '<p class="font-weight-bold dark-grey-text">'+str(fechaLlegadaSinHora)+'</p><hr class="my-5">'
-                        html += '<div class="line-between"></div>'
-                        html += '</div>'
-                        acumulacionTiempo = 0
-                        recursos = 0
-                        try:
-                            acumulacionTiempo = acumulacionTiempo + Decimal(duracionSegmentos[duracionIndex])
-                        except:
+                        mismoDia = fechaLlegada + relativedelta(hour=Final)
+                        horasPrimerDia = Final - Llegada
+                        comprobarUltimoDia = fechaSalidaSinHora - fechaLlegadaSinHora
+                        if comprobarUltimoDia.days <= 0:
+                            horasPrimerDia = diff.seconds
+                            horasPrimerDia = horasPrimerDia / 3600
+                            print('inicio: '+ str(fechaLlegada))
+                            for i in range(horasPrimerDia):
+                                horasUtiles+=1
+                                print(fechaLlegada + relativedelta(hours=+(i + 1)))
+                            print('Horas dia 1:' +str(horasPrimerDia))
+                            html += '<div class="dayBlock">'
+                            html += '<div class="dia-container">'
+                            html += '<p class="font-weight-bold dark-grey-text">'+str(fechaLlegadaSinHora)+'</p><hr class="my-5">'
+                            html += '</div>'
                             acumulacionTiempo = 0
-                        itemsPlan = []
-                        itemsPlanMovil = []
-                        for index, tiempo in enumerate(tiempos):
-                            tiempoRecurso = tiempo.get('tiempo')
-                            if acumulacionTiempo <= horasPrimerDia:
-                                recursos += 1
-                                nombreRecurso = nombreRecursos[index].get('nombre')
-                                descipcionRecurso = descipcionRecursos[index].get('descripcion')
-                                tipoRecurso = tipoRecursos[index].get('tipo')
-                                observacionesRecurso = observacionesRecursos[index].get('observaciones')
-                                fotosRecurso = fotosRecursos[index].get('images')
-                                html += '<div class="itinerarioRuta">'
-                                html += '<div class="left-col-ruta"></div>'
-                                html += '<div class="right-col-ruta">'
-                                duracion = '0'
-                                try:
-                                    duracion = str(int(duracionSegmentos[duracionIndex] * 60))
-                                    html += '<hr class="my-5"><span class="travel-time"><i class="fa fa-car" aria-hidden="true"></i>  ' + str(
-                                        int(duracionSegmentos[duracionIndex] * 60)) + ' minutos</span>'
-                                except:
-                                    html += ''
-                                html += '</div>'
-                                html += '</div>'
-                                html += '<div class="itinerario">'
-                                html += '<div class="contenidoVisita">'
-                                html += '<div class="left-col">'
-                                hora = fechaLlegada + relativedelta(hours=+float(acumulacionTiempo))
-                                horaConDesplazamiento = hora + relativedelta(
-                                    minutes=+int(duracionSegmentos[duracionIndex]))
+                            recursos = 0
+                            try:
+                                acumulacionTiempo = acumulacionTiempo + Decimal(duracionSegmentos[duracionIndex])
+                            except:
+                                acumulacionTiempo = 0
+                            itemsPlan = []
+                            itemsPlanMovil = []
+                            for index,tiempo in enumerate(tiempos):
+                                tiempoRecurso = tiempo.get('tiempo')
+                                if acumulacionTiempo <= horasPrimerDia:
+                                    recursos+=1
+                                    nombreRecurso = nombreRecursos[index].get('nombre')
+                                    descipcionRecurso = descipcionRecursos[index].get('descripcion')
+                                    tipoRecurso = tipoRecursos[index].get('tipo')
+                                    observacionesRecurso = observacionesRecursos[index].get('observaciones')
+                                    fotosRecurso = fotosRecursos[index].get('images')
+                                    html += '<div class="itinerarioRuta">'
+                                    html += '<div class="left-col-ruta"></div>'
+                                    html += '<div class="right-col-ruta">'
+                                    duracion = '0'
+                                    try:
+                                        duracion = str(int(duracionSegmentos[duracionIndex] * 60))
+                                        html += '<span class="travel-time"><i class="fa fa-car" aria-hidden="true"></i>  ' + str(
+                                            int(duracionSegmentos[duracionIndex] * 60)) + ' minutos</span>'
+                                    except:
+                                        html += ''
+                                    html += '</div>'
+                                    html += '</div>'
+                                    html += '<div class="itinerario">'
+                                    html += '<div class="contenidoVisita">'
+                                    html += '<div class="left-col">'
+                                    hora=fechaLlegada + relativedelta(hours=+float(acumulacionTiempo))
+                                    horaConDesplazamiento = hora + relativedelta(minutes=+int(duracionSegmentos[duracionIndex]))
 
-                                duracionIndex+=1
-                                try:
-                                    acumulacionTiempo = tiempoRecurso + acumulacionTiempo + Decimal(
-                                        duracionSegmentos[duracionIndex])
-                                except:
-                                    acumulacionTiempo = 0
-                                html += '<p class="font-weight-bold dark-grey-text"><mdb-icon far icon="clock" class="pr-2"</mdb-icon> ' + str(horaConDesplazamiento.time()) + '</p>'
-                                html += '</div>'
-                                html += '<div class="row">'
-                                html += '<div class="col-lg-5">'
-                                html += '<div class="view overlay rounded z-depth-2 mb-lg-0 mb-4 waves-light" mdbWavesEffect><img class="img-fluid" src="https://mdbootstrap.com/img/Photos/Others/img (28).jpg"/></div>'
-                                html += '</div>'
-                                html += '<div class="col-lg-7">'
-                                html += '<a href="#!" class="indigo-text"><h6 class="font-weight-bold mb-3"><mdb-icon fas icon="suitcase" class="pr-2"></mdb-icon>Travels</h6></a>'
-                                html += '<h3 class="font-weight-bold mb-3"><strong>' + nombreRecurso + '</strong></h3>'
-                                html += '<p>' + descipcionRecurso + '</p>'
-                                html += '<p><strong>Tiempo de visita estimado:</strong> ' + str(tiempoRecurso) + ' h</p>'
-                                html += '<button type="button" mdbBtn color="primary" mdbWavesEffect>Primary</button>'
-                                html += '</div>'
-                                html += '</div>'
-                                html += '</div>'
-                                html += '</div>'
-                                html += '<div class="line-between"></div>'
-                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}, None])
-                                itemsPlanMovil.append({"index":recursoIndex,"travel_duration":int(duracion),"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": float(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": recursoIndex,"note":None})
-                                recursoIndex = recursoIndex + 1
-                        html += '</div>'
-                        plan.append({str(fechaLlegadaSinHora):itemsPlan})
-                        planMovil.append({"date":str(fechaLlegadaSinHora),"points":itemsPlanMovil})
-                        # eliminamos los recursos que ya hemos usado
-                        del imagenesRecursos[0:recursos]
-                        del tiempos[0:recursos]
-                        del nombreRecursos[0:recursos]
-                        del descipcionRecursos[0:recursos]
-                        del tipoRecursos[0:recursos]
-                        del observacionesRecursos[0:recursos]
-                        del fotosRecursos[0:recursos]
+                                    duracionIndex+=1
+                                    try:
+                                        acumulacionTiempo = tiempoRecurso + acumulacionTiempo + Decimal(duracionSegmentos[duracionIndex])
+                                    except:
+                                        acumulacionTiempo = 0
+                                    html += '<p class="font-weight-bold dark-grey-text"><mdb-icon far icon="clock" class="pr-2"</mdb-icon> ' + str(horaConDesplazamiento.time()) + '</p>'
+                                    html += '</div>'
+                                    html += '<div class="row">'
+                                    html += '<div class="col-lg-5">'
+                                    html += '<div class="view overlay rounded z-depth-2 mb-lg-0 mb-4 waves-light" mdbWavesEffect><img class="img-fluid" src="https://mdbootstrap.com/img/Photos/Others/img (28).jpg"/></div>'
+                                    html += '</div>'
+                                    html += '<div class="col-lg-7">'
+                                    html += '<a href="#!" class="indigo-text"><h6 class="font-weight-bold mb-3"><mdb-icon fas icon="suitcase" class="pr-2"></mdb-icon>Travels</h6></a>'
+                                    html += '<h3 class="font-weight-bold mb-3"><strong>' + nombreRecurso + '</strong></h3>'
+                                    html += '<p>' + descipcionRecurso + '</p>'
+                                    html += '<p><strong>Tiempo de visita estimado:</strong> ' + str(tiempoRecurso) + ' h</p>'
+                                    html += '<button type="button" mdbBtn color="primary" mdbWavesEffect>Primary</button>'
+                                    html += '</div>'
+                                    html += '</div>'
+                                    html += '</div>'
+                                    html += '</div>'
+                                    html += '<div class="line-between"></div>'
+                                    itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}, None])
+                                    itemsPlanMovil.append({"index":recursoIndex,"travel_duration":+int(duracion),"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": float(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": recursoIndex,"note":None})
+                                    recursoIndex = recursoIndex + 1
+                            html += '</div>'
+                            plan.append({str(fechaLlegadaSinHora):itemsPlan})
+                            planMovil.append({"date":str(fechaLlegadaSinHora),"points":itemsPlanMovil})
+                            #eliminamos los recursos que ya hemos usado
+                            del imagenesRecursos[0:recursos]
+                            del tiempos[0:recursos]
+                            del nombreRecursos[0:recursos]
+                            del descipcionRecursos[0:recursos]
+                            del tipoRecursos[0:recursos]
+                            del observacionesRecursos[0:recursos]
+                            del fotosRecursos[0:recursos]
+                            print('fin')
 
-                #segundo dia
-                if numeroDias > 1:
-                    fechaSiguienteSinHora = fechaSiguienteSinHora+ relativedelta(days=+1)
-                    nuevoDiaInicio = fechaLlegada + relativedelta(days=+1, hour=Inicial)
-                    nuevoDiaFin = nuevoDiaInicio + relativedelta(hour=Final)
-                    #comprobamos si la fecha coincide con el ultimo dia
-                    comprobarUltimoDia= fechaSalidaSinHora - fechaSiguienteSinHora
-                    if comprobarUltimoDia.days <= 0:
-                        horasDiarias = fechaSalida - nuevoDiaInicio
-                        horasDiarias = horasDiarias.seconds
-                        horasDiarias = horasDiarias//3600
-                        print('inicio: '+ str(nuevoDiaInicio))
-                        for i in range(horasDiarias):
-                            horasUtiles +=1
-                            print(nuevoDiaInicio + relativedelta(hours=+(i+1)))
-                        print('Horas dia 2:' + str(horasDiarias))
-                        print('fin')
-                        html += '<div class="dayBlock">'
-                        html += '<div class="dia-container">'
-
-                        html += '<p class="font-weight-bold dark-grey-text">'+str(fechaSiguienteSinHora)+'</p><hr class="my-5">'
-                        html += '</div>'
-                        html += '<div class="line-between"></div>'
-                        acumulacionTiempo = 0
-                        recursos = 0
-                        try:
-                            acumulacionTiempo = acumulacionTiempo + Decimal(duracionSegmentos[duracionIndex])
-                        except:
+                        else:
+                            print('inicio: '+str(fechaLlegada))
+                            for i in range(horasPrimerDia):
+                                horasUtiles +=1
+                                print(fechaLlegada + relativedelta(hours=+(i+1)))
+                            print('Horas dia 1:'+ str(horasPrimerDia))
+                            html += '<div class="dayBlock">'
+                            html += '<div class="dia-container">'
+                            html += '<p class="font-weight-bold dark-grey-text">'+str(fechaLlegadaSinHora)+'</p><hr class="my-5">'
+                            html += '<div class="line-between"></div>'
+                            html += '</div>'
                             acumulacionTiempo = 0
-                        itemsPlan = []
-                        itemsPlanMovil = []
-                        for index, tiempo in enumerate(tiempos):
-                            tiempoRecurso = tiempo.get('tiempo')
-                            if acumulacionTiempo <= horasDiarias:
-                                recursos += 1
-                                nombreRecurso = nombreRecursos[index].get('nombre')
-                                descipcionRecurso = descipcionRecursos[index].get('descripcion')
-                                tipoRecurso = tipoRecursos[index].get('tipo')
-                                observacionesRecurso = observacionesRecursos[index].get('observaciones')
-                                fotosRecurso = fotosRecursos[index].get('images')
-                                html += '<div class="itinerarioRuta">'
-                                html += '<div class="left-col-ruta"></div>'
-                                html += '<div class="right-col-ruta">'
-                                duracion = '0'
-                                try:
-                                    duracion = str(int(duracionSegmentos[duracionIndex] * 60))
-                                    html += '<hr class="my-5"><span class="travel-time"><i class="fa fa-car" aria-hidden="true"></i>  ' + str(
-                                        int(duracionSegmentos[duracionIndex] * 60)) + ' minutos</span>'
-                                except:
-                                    html += ''
-                                html += '</div>'
-                                html += '</div>'
-                                html += '<div class="itinerario">'
-                                html += '<div class="contenidoVisita">'
-                                html += '<div class="left-col">'
-                                hora = nuevoDiaInicio + relativedelta(hours=+float(acumulacionTiempo))
-                                horaConDesplazamiento = hora + relativedelta(
-                                    minutes=+int(duracionSegmentos[duracionIndex]))
+                            recursos = 0
+                            try:
+                                acumulacionTiempo = acumulacionTiempo + Decimal(duracionSegmentos[duracionIndex])
+                            except:
+                                acumulacionTiempo = 0
+                            itemsPlan = []
+                            itemsPlanMovil = []
+                            for index, tiempo in enumerate(tiempos):
+                                tiempoRecurso = tiempo.get('tiempo')
+                                if acumulacionTiempo <= horasPrimerDia:
+                                    recursos += 1
+                                    nombreRecurso = nombreRecursos[index].get('nombre')
+                                    descipcionRecurso = descipcionRecursos[index].get('descripcion')
+                                    tipoRecurso = tipoRecursos[index].get('tipo')
+                                    observacionesRecurso = observacionesRecursos[index].get('observaciones')
+                                    fotosRecurso = fotosRecursos[index].get('images')
+                                    html += '<div class="itinerarioRuta">'
+                                    html += '<div class="left-col-ruta"></div>'
+                                    html += '<div class="right-col-ruta">'
+                                    duracion = '0'
+                                    try:
+                                        duracion = str(int(duracionSegmentos[duracionIndex] * 60))
+                                        html += '<hr class="my-5"><span class="travel-time"><i class="fa fa-car" aria-hidden="true"></i>  ' + str(
+                                            int(duracionSegmentos[duracionIndex] * 60)) + ' minutos</span>'
+                                    except:
+                                        html += ''
+                                    html += '</div>'
+                                    html += '</div>'
+                                    html += '<div class="itinerario">'
+                                    html += '<div class="contenidoVisita">'
+                                    html += '<div class="left-col">'
+                                    hora = fechaLlegada + relativedelta(hours=+float(acumulacionTiempo))
+                                    horaConDesplazamiento = hora + relativedelta(
+                                        minutes=+int(duracionSegmentos[duracionIndex]))
 
-                                duracionIndex+=1
-                                try:
-                                    acumulacionTiempo = tiempoRecurso + acumulacionTiempo + Decimal(
-                                        duracionSegmentos[duracionIndex])
-                                except:
-                                    acumulacionTiempo = 0
-                                html += '<p class="font-weight-bold dark-grey-text"><mdb-icon far icon="clock" class="pr-2"</mdb-icon> ' + str(horaConDesplazamiento.time()) + '</p>'
-                                html += '</div>'
-                                html += '<div class="row">'
-                                html += '<div class="col-lg-5">'
-                                html += '<div class="view overlay rounded z-depth-2 mb-lg-0 mb-4 waves-light" mdbWavesEffect><img class="img-fluid" src="https://mdbootstrap.com/img/Photos/Others/img (28).jpg"/></div>'
-                                html += '</div>'
-                                html += '<div class="col-lg-7">'
-                                html += '<a href="#!" class="indigo-text"><h6 class="font-weight-bold mb-3"><mdb-icon fas icon="suitcase" class="pr-2"></mdb-icon>Travels</h6></a>'
-                                html += '<h3 class="font-weight-bold mb-3"><strong>' + nombreRecurso + '</strong></h3>'
-                                html += '<p>' + descipcionRecurso + '</p>'
-                                html += '<p><strong>Tiempo de visita estimado:</strong> ' + str(tiempoRecurso) + ' h</p>'
-                                html += '<button type="button" mdbBtn color="primary" mdbWavesEffect>Primary</button>'
-                                html += '</div>'
-                                html += '</div>'
-                                html += '</div>'
-                                html += '</div>'
-                                html += '<div class="line-between"></div>'
-                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}, None])
-                                itemsPlanMovil.append({"index":recursoIndex,"travel_duration":int(duracion),"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": float(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": recursoIndex,"note":None})
-                                recursoIndex = recursoIndex + 1
-                        html += '</div>'
-                        plan.append({str(fechaSiguienteSinHora):itemsPlan})
-                        planMovil.append({"date":str(fechaSiguienteSinHora),"points":itemsPlanMovil})
-                        # eliminamos los recursos que ya hemos usado
-                        del imagenesRecursos[0:recursos]
-                        del tiempos[0:recursos]
-                        del nombreRecursos[0:recursos]
-                        del descipcionRecursos[0:recursos]
-                        del tipoRecursos[0:recursos]
-                        del observacionesRecursos[0:recursos]
-                        del fotosRecursos[0:recursos]
-                    else:
-                        print('inicio: '+ str(nuevoDiaInicio))
-                        for i in range(horasDiarias):
-                            horasUtiles +=1
-                            print(nuevoDiaInicio + relativedelta(hours=+(i+1)))
-                        print('Horas dia 2:' + str(horasDiarias))
-                        html += '<div class="dayBlock">'
-                        html += '<div class="dia-container">'
-                        html += '<p class="font-weight-bold dark-grey-text">'+str(fechaSiguienteSinHora)+'</p><hr class="my-5">'
-                        html += '</div>'
-                        html += '<div class="line-between"></div>'
-                        acumulacionTiempo = 0
-                        recursos = 0
-                        try:
-                            acumulacionTiempo = acumulacionTiempo + Decimal(duracionSegmentos[duracionIndex])
-                        except:
-                            acumulacionTiempo = 0
-                        itemsPlan = []
-                        itemsPlanMovil = []
-                        for index, tiempo in enumerate(tiempos):
-                            tiempoRecurso = tiempo.get('tiempo')
-                            if acumulacionTiempo <= horasDiarias:
-                                recursos += 1
-                                nombreRecurso = nombreRecursos[index].get('nombre')
-                                descipcionRecurso = descipcionRecursos[index].get('descripcion')
-                                tipoRecurso = tipoRecursos[index].get('tipo')
-                                observacionesRecurso = observacionesRecursos[index].get('observaciones')
-                                fotosRecurso = fotosRecursos[index].get('images')
-                                html += '<div class="itinerarioRuta">'
-                                html += '<div class="left-col-ruta"></div>'
-                                html += '<div class="right-col-ruta">'
-                                duracion = '0'
-                                try:
-                                    duracion = str(int(duracionSegmentos[duracionIndex] * 60))
-                                    html += '<hr class="my-5"><span class="travel-time"><i class="fa fa-car" aria-hidden="true"></i>  ' + str(
-                                        int(duracionSegmentos[duracionIndex] * 60)) + ' minutos</span>'
-                                except:
-                                    html += ''
-                                html += '</div>'
-                                html += '</div>'
-                                html += '<div class="itinerario">'
-                                html += '<div class="contenidoVisita">'
-                                html += '<div class="left-col">'
-                                hora = nuevoDiaInicio + relativedelta(hours=+float(acumulacionTiempo))
-                                horaConDesplazamiento = hora + relativedelta(
-                                    minutes=+int(duracionSegmentos[duracionIndex]))
+                                    duracionIndex+=1
+                                    try:
+                                        acumulacionTiempo = tiempoRecurso + acumulacionTiempo + Decimal(
+                                            duracionSegmentos[duracionIndex])
+                                    except:
+                                        acumulacionTiempo = 0
+                                    html += '<p class="font-weight-bold dark-grey-text"><mdb-icon far icon="clock" class="pr-2"</mdb-icon> ' + str(horaConDesplazamiento.time()) + '</p>'
+                                    html += '</div>'
+                                    html += '<div class="row">'
+                                    html += '<div class="col-lg-5">'
+                                    html += '<div class="view overlay rounded z-depth-2 mb-lg-0 mb-4 waves-light" mdbWavesEffect><img class="img-fluid" src="https://mdbootstrap.com/img/Photos/Others/img (28).jpg"/></div>'
+                                    html += '</div>'
+                                    html += '<div class="col-lg-7">'
+                                    html += '<a href="#!" class="indigo-text"><h6 class="font-weight-bold mb-3"><mdb-icon fas icon="suitcase" class="pr-2"></mdb-icon>Travels</h6></a>'
+                                    html += '<h3 class="font-weight-bold mb-3"><strong>' + nombreRecurso + '</strong></h3>'
+                                    html += '<p>' + descipcionRecurso + '</p>'
+                                    html += '<p><strong>Tiempo de visita estimado:</strong> ' + str(tiempoRecurso) + ' h</p>'
+                                    html += '<button type="button" mdbBtn color="primary" mdbWavesEffect>Primary</button>'
+                                    html += '</div>'
+                                    html += '</div>'
+                                    html += '</div>'
+                                    html += '</div>'
+                                    html += '<div class="line-between"></div>'
+                                    itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}, None])
+                                    itemsPlanMovil.append({"index":recursoIndex,"travel_duration":int(duracion),"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": float(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": recursoIndex,"note":None})
+                                    recursoIndex = recursoIndex + 1
+                            html += '</div>'
+                            plan.append({str(fechaLlegadaSinHora):itemsPlan})
+                            planMovil.append({"date":str(fechaLlegadaSinHora),"points":itemsPlanMovil})
+                            # eliminamos los recursos que ya hemos usado
+                            del imagenesRecursos[0:recursos]
+                            del tiempos[0:recursos]
+                            del nombreRecursos[0:recursos]
+                            del descipcionRecursos[0:recursos]
+                            del tipoRecursos[0:recursos]
+                            del observacionesRecursos[0:recursos]
+                            del fotosRecursos[0:recursos]
 
-                                duracionIndex+=1
-                                try:
-                                    acumulacionTiempo = tiempoRecurso + acumulacionTiempo + Decimal(
-                                        duracionSegmentos[duracionIndex])
-                                except:
-                                    acumulacionTiempo = 0
-                                html += '<p class="font-weight-bold dark-grey-text"><mdb-icon far icon="clock" class="pr-2"</mdb-icon> ' + str(horaConDesplazamiento.time()) + '</p>'
-                                html += '</div>'
-                                html += '<div class="row">'
-                                html += '<div class="col-lg-5">'
-                                html += '<div class="view overlay rounded z-depth-2 mb-lg-0 mb-4 waves-light" mdbWavesEffect><img class="img-fluid" src="https://mdbootstrap.com/img/Photos/Others/img (28).jpg"/></div>'
-                                html += '</div>'
-                                html += '<div class="col-lg-7">'
-                                html += '<a href="#!" class="indigo-text"><h6 class="font-weight-bold mb-3"><mdb-icon fas icon="suitcase" class="pr-2"></mdb-icon>Travels</h6></a>'
-                                html += '<h3 class="font-weight-bold mb-3"><strong>' + nombreRecurso + '</strong></h3>'
-                                html += '<p>' + descipcionRecurso + '</p>'
-                                html += '<p><strong>Tiempo de visita estimado:</strong> ' + str(tiempoRecurso) + ' h</p>'
-                                html += '<button type="button" mdbBtn color="primary" mdbWavesEffect>Primary</button>'
-                                html += '</div>'
-                                html += '</div>'
-                                html += '</div>'
-                                html += '</div>'
-                                html += '<div class="line-between"></div>'
-                                itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}, None])
-                                itemsPlanMovil.append({"index":recursoIndex,"travel_duration":int(duracion),"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": float(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": recursoIndex,"note":None})
-                                recursoIndex = recursoIndex + 1
-                        html += '</div>'
-                        plan.append({str(fechaSiguienteSinHora):itemsPlan})
-                        planMovil.append({"date":str(fechaSiguienteSinHora),"points":itemsPlanMovil})
-                        # eliminamos los recursos que ya hemos usado
-                        del imagenesRecursos[0:recursos]
-                        del tiempos[0:recursos]
-                        del nombreRecursos[0:recursos]
-                        del descipcionRecursos[0:recursos]
-                        del tipoRecursos[0:recursos]
-                        del observacionesRecursos[0:recursos]
-                        del fotosRecursos[0:recursos]
-
-                #dias restantes
-                if numeroDias > 2:
-                    for j in range(numeroDias-2):
-                        fechaSiguienteSinHora = fechaSiguienteSinHora + relativedelta(days=+1)
-                        nuevoDiaInicio = nuevoDiaInicio + relativedelta(days=+1, hour=Inicial)
+                    #segundo dia
+                    if numeroDias > 1:
+                        fechaSiguienteSinHora = fechaSiguienteSinHora+ relativedelta(days=+1)
+                        nuevoDiaInicio = fechaLlegada + relativedelta(days=+1, hour=Inicial)
                         nuevoDiaFin = nuevoDiaInicio + relativedelta(hour=Final)
-                        # comprobamos si la fecha coincide con el ultimo dia
-                        comprobarUltimoDia = fechaSalidaSinHora - fechaSiguienteSinHora
+                        #comprobamos si la fecha coincide con el ultimo dia
+                        comprobarUltimoDia= fechaSalidaSinHora - fechaSiguienteSinHora
                         if comprobarUltimoDia.days <= 0:
                             horasDiarias = fechaSalida - nuevoDiaInicio
                             horasDiarias = horasDiarias.seconds
-                            horasDiarias = horasDiarias // 3600
+                            horasDiarias = horasDiarias//3600
                             print('inicio: '+ str(nuevoDiaInicio))
                             for i in range(horasDiarias):
                                 horasUtiles +=1
-                                print(nuevoDiaInicio + relativedelta(hours=+(i + 1)))
-                            print('Horas dia ' +str(j+3) +': '+ str(horasDiarias))
+                                print(nuevoDiaInicio + relativedelta(hours=+(i+1)))
+                            print('Horas dia 2:' + str(horasDiarias))
                             print('fin')
+                            html += '<div class="dayBlock">'
+                            html += '<div class="dia-container">'
+
+                            html += '<p class="font-weight-bold dark-grey-text">'+str(fechaSiguienteSinHora)+'</p><hr class="my-5">'
+                            html += '</div>'
+                            html += '<div class="line-between"></div>'
+                            acumulacionTiempo = 0
+                            recursos = 0
+                            try:
+                                acumulacionTiempo = acumulacionTiempo + Decimal(duracionSegmentos[duracionIndex])
+                            except:
+                                acumulacionTiempo = 0
+                            itemsPlan = []
+                            itemsPlanMovil = []
+                            for index, tiempo in enumerate(tiempos):
+                                tiempoRecurso = tiempo.get('tiempo')
+                                if acumulacionTiempo <= horasDiarias:
+                                    recursos += 1
+                                    nombreRecurso = nombreRecursos[index].get('nombre')
+                                    descipcionRecurso = descipcionRecursos[index].get('descripcion')
+                                    tipoRecurso = tipoRecursos[index].get('tipo')
+                                    observacionesRecurso = observacionesRecursos[index].get('observaciones')
+                                    fotosRecurso = fotosRecursos[index].get('images')
+                                    html += '<div class="itinerarioRuta">'
+                                    html += '<div class="left-col-ruta"></div>'
+                                    html += '<div class="right-col-ruta">'
+                                    duracion = '0'
+                                    try:
+                                        duracion = str(int(duracionSegmentos[duracionIndex] * 60))
+                                        html += '<hr class="my-5"><span class="travel-time"><i class="fa fa-car" aria-hidden="true"></i>  ' + str(
+                                            int(duracionSegmentos[duracionIndex] * 60)) + ' minutos</span>'
+                                    except:
+                                        html += ''
+                                    html += '</div>'
+                                    html += '</div>'
+                                    html += '<div class="itinerario">'
+                                    html += '<div class="contenidoVisita">'
+                                    html += '<div class="left-col">'
+                                    hora = nuevoDiaInicio + relativedelta(hours=+float(acumulacionTiempo))
+                                    horaConDesplazamiento = hora + relativedelta(
+                                        minutes=+int(duracionSegmentos[duracionIndex]))
+
+                                    duracionIndex+=1
+                                    try:
+                                        acumulacionTiempo = tiempoRecurso + acumulacionTiempo + Decimal(
+                                            duracionSegmentos[duracionIndex])
+                                    except:
+                                        acumulacionTiempo = 0
+                                    html += '<p class="font-weight-bold dark-grey-text"><mdb-icon far icon="clock" class="pr-2"</mdb-icon> ' + str(horaConDesplazamiento.time()) + '</p>'
+                                    html += '</div>'
+                                    html += '<div class="row">'
+                                    html += '<div class="col-lg-5">'
+                                    html += '<div class="view overlay rounded z-depth-2 mb-lg-0 mb-4 waves-light" mdbWavesEffect><img class="img-fluid" src="https://mdbootstrap.com/img/Photos/Others/img (28).jpg"/></div>'
+                                    html += '</div>'
+                                    html += '<div class="col-lg-7">'
+                                    html += '<a href="#!" class="indigo-text"><h6 class="font-weight-bold mb-3"><mdb-icon fas icon="suitcase" class="pr-2"></mdb-icon>Travels</h6></a>'
+                                    html += '<h3 class="font-weight-bold mb-3"><strong>' + nombreRecurso + '</strong></h3>'
+                                    html += '<p>' + descipcionRecurso + '</p>'
+                                    html += '<p><strong>Tiempo de visita estimado:</strong> ' + str(tiempoRecurso) + ' h</p>'
+                                    html += '<button type="button" mdbBtn color="primary" mdbWavesEffect>Primary</button>'
+                                    html += '</div>'
+                                    html += '</div>'
+                                    html += '</div>'
+                                    html += '</div>'
+                                    html += '<div class="line-between"></div>'
+                                    itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}, None])
+                                    itemsPlanMovil.append({"index":recursoIndex,"travel_duration":int(duracion),"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": float(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": recursoIndex,"note":None})
+                                    recursoIndex = recursoIndex + 1
+                            html += '</div>'
+                            plan.append({str(fechaSiguienteSinHora):itemsPlan})
+                            planMovil.append({"date":str(fechaSiguienteSinHora),"points":itemsPlanMovil})
+                            # eliminamos los recursos que ya hemos usado
+                            del imagenesRecursos[0:recursos]
+                            del tiempos[0:recursos]
+                            del nombreRecursos[0:recursos]
+                            del descipcionRecursos[0:recursos]
+                            del tipoRecursos[0:recursos]
+                            del observacionesRecursos[0:recursos]
+                            del fotosRecursos[0:recursos]
+                        else:
+                            print('inicio: '+ str(nuevoDiaInicio))
+                            for i in range(horasDiarias):
+                                horasUtiles +=1
+                                print(nuevoDiaInicio + relativedelta(hours=+(i+1)))
+                            print('Horas dia 2:' + str(horasDiarias))
                             html += '<div class="dayBlock">'
                             html += '<div class="dia-container">'
                             html += '<p class="font-weight-bold dark-grey-text">'+str(fechaSiguienteSinHora)+'</p><hr class="my-5">'
@@ -709,138 +616,253 @@ class PlanMovilView(views.APIView):
                             del observacionesRecursos[0:recursos]
                             del fotosRecursos[0:recursos]
 
-                        else:
-                            print('inicio: '+ str(nuevoDiaInicio))
-                            for i in range(horasDiarias):
-                                horasUtiles +=1
-                                print(nuevoDiaInicio + relativedelta(hours=+(i + 1)))
-                            print('Horas dia ' + str(j + 3) +': '+ str(horasDiarias))
-                            html += '<div class="dayBlock">'
-                            html += '<div class="dia-container">'
-                            html += '<p class="font-weight-bold dark-grey-text">'+str(fechaSiguienteSinHora)+'</p><hr class="my-5">'
-                            html += '</div>'
-                            html += '<div class="line-between"></div>'
-                            acumulacionTiempo = 0
-                            recursos = 0
-                            try:
-                                acumulacionTiempo = acumulacionTiempo + Decimal(duracionSegmentos[duracionIndex])
-                            except:
+                    #dias restantes
+                    if numeroDias > 2:
+                        for j in range(numeroDias-2):
+                            fechaSiguienteSinHora = fechaSiguienteSinHora + relativedelta(days=+1)
+                            nuevoDiaInicio = nuevoDiaInicio + relativedelta(days=+1, hour=Inicial)
+                            nuevoDiaFin = nuevoDiaInicio + relativedelta(hour=Final)
+                            # comprobamos si la fecha coincide con el ultimo dia
+                            comprobarUltimoDia = fechaSalidaSinHora - fechaSiguienteSinHora
+                            if comprobarUltimoDia.days <= 0:
+                                horasDiarias = fechaSalida - nuevoDiaInicio
+                                horasDiarias = horasDiarias.seconds
+                                horasDiarias = horasDiarias // 3600
+                                print('inicio: '+ str(nuevoDiaInicio))
+                                for i in range(horasDiarias):
+                                    horasUtiles +=1
+                                    print(nuevoDiaInicio + relativedelta(hours=+(i + 1)))
+                                print('Horas dia ' +str(j+3) +': '+ str(horasDiarias))
+                                print('fin')
+                                html += '<div class="dayBlock">'
+                                html += '<div class="dia-container">'
+                                html += '<p class="font-weight-bold dark-grey-text">'+str(fechaSiguienteSinHora)+'</p><hr class="my-5">'
+                                html += '</div>'
+                                html += '<div class="line-between"></div>'
                                 acumulacionTiempo = 0
-                            itemsPlan = []
-                            itemsPlanMovil = []
-                            for index, tiempo in enumerate(tiempos):
-                                tiempoRecurso = tiempo.get('tiempo')
-                                if acumulacionTiempo <= horasDiarias:
-                                    recursos += 1
-                                    nombreRecurso = nombreRecursos[index].get('nombre')
-                                    descipcionRecurso = descipcionRecursos[index].get('descripcion')
-                                    tipoRecurso = tipoRecursos[index].get('tipo')
-                                    observacionesRecurso = observacionesRecursos[index].get('observaciones')
-                                    fotosRecurso = fotosRecursos[index].get('images')
-                                    html += '<div class="itinerarioRuta">'
-                                    html += '<div class="left-col-ruta"></div>'
-                                    html += '<div class="right-col-ruta">'
-                                    duracion = '0'
-                                    try:
-                                        duracion = str(int(duracionSegmentos[duracionIndex] * 60))
-                                        html += '<hr class="my-5"><span class="travel-time"><i class="fa fa-car" aria-hidden="true"></i>  ' + str(
-                                            int(duracionSegmentos[duracionIndex] * 60)) + ' minutos</span>'
-                                    except:
-                                        html += ''
-                                    html += '</div>'
-                                    html += '</div>'
-                                    html += '<div class="itinerario">'
-                                    html += '<div class="contenidoVisita">'
-                                    html += '<div class="left-col">'
-                                    hora = nuevoDiaInicio + relativedelta(hours=+float(acumulacionTiempo))
-                                    horaConDesplazamiento = hora + relativedelta(
-                                        minutes=+int(duracionSegmentos[duracionIndex]))
+                                recursos = 0
+                                try:
+                                    acumulacionTiempo = acumulacionTiempo + Decimal(duracionSegmentos[duracionIndex])
+                                except:
+                                    acumulacionTiempo = 0
+                                itemsPlan = []
+                                itemsPlanMovil = []
+                                for index, tiempo in enumerate(tiempos):
+                                    tiempoRecurso = tiempo.get('tiempo')
+                                    if acumulacionTiempo <= horasDiarias:
+                                        recursos += 1
+                                        nombreRecurso = nombreRecursos[index].get('nombre')
+                                        descipcionRecurso = descipcionRecursos[index].get('descripcion')
+                                        tipoRecurso = tipoRecursos[index].get('tipo')
+                                        observacionesRecurso = observacionesRecursos[index].get('observaciones')
+                                        fotosRecurso = fotosRecursos[index].get('images')
+                                        html += '<div class="itinerarioRuta">'
+                                        html += '<div class="left-col-ruta"></div>'
+                                        html += '<div class="right-col-ruta">'
+                                        duracion = '0'
+                                        try:
+                                            duracion = str(int(duracionSegmentos[duracionIndex] * 60))
+                                            html += '<hr class="my-5"><span class="travel-time"><i class="fa fa-car" aria-hidden="true"></i>  ' + str(
+                                                int(duracionSegmentos[duracionIndex] * 60)) + ' minutos</span>'
+                                        except:
+                                            html += ''
+                                        html += '</div>'
+                                        html += '</div>'
+                                        html += '<div class="itinerario">'
+                                        html += '<div class="contenidoVisita">'
+                                        html += '<div class="left-col">'
+                                        hora = nuevoDiaInicio + relativedelta(hours=+float(acumulacionTiempo))
+                                        horaConDesplazamiento = hora + relativedelta(
+                                            minutes=+int(duracionSegmentos[duracionIndex]))
 
-                                    duracionIndex+=1
-                                    try:
-                                        acumulacionTiempo = tiempoRecurso + acumulacionTiempo + Decimal(
-                                            duracionSegmentos[duracionIndex])
-                                    except:
-                                        acumulacionTiempo = 0
-                                    html += '<p class="font-weight-bold dark-grey-text"><mdb-icon far icon="clock" class="pr-2"</mdb-icon> ' + str(horaConDesplazamiento.time()) + '</p>'
-                                    html += '</div>'
-                                    html += '<div class="row">'
-                                    html += '<div class="col-lg-5">'
-                                    html += '<div class="view overlay rounded z-depth-2 mb-lg-0 mb-4 waves-light" mdbWavesEffect><img class="img-fluid" src="https://mdbootstrap.com/img/Photos/Others/img (28).jpg"/></div>'
-                                    html += '</div>'
-                                    html += '<div class="col-lg-7">'
-                                    html += '<a href="#!" class="indigo-text"><h6 class="font-weight-bold mb-3"><mdb-icon fas icon="suitcase" class="pr-2"></mdb-icon>Travels</h6></a>'
-                                    html += '<h3 class="font-weight-bold mb-3"><strong>' + nombreRecurso + '</strong></h3>'
-                                    html += '<p>' + descipcionRecurso + '</p>'
-                                    html += '<p><strong>Tiempo de visita estimado:</strong> ' + str(tiempoRecurso) + ' h</p>'
-                                    html += '<button type="button" mdbBtn color="primary" mdbWavesEffect>Primary</button>'
-                                    html += '</div>'
-                                    html += '</div>'
-                                    html += '</div>'
-                                    html += '</div>'
-                                    html += '<div class="line-between"></div>'
-                                    itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}, None])
-                                    itemsPlanMovil.append({"index":recursoIndex,"travel_duration":int(duracion),"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": float(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": recursoIndex,"note":None})
-                                    recursoIndex = recursoIndex + 1
-                            html += '</div>'
-                            plan.append({str(fechaSiguienteSinHora):itemsPlan})
-                            planMovil.append({"date": str(fechaSiguienteSinHora), "points":itemsPlanMovil})
-                            # eliminamos los recursos que ya hemos usado
-                            del imagenesRecursos[0:recursos]
-                            del tiempos[0:recursos]
-                            del nombreRecursos[0:recursos]
-                            del descipcionRecursos[0:recursos]
-                            del tipoRecursos[0:recursos]
-                            del observacionesRecursos[0:recursos]
-                            del fotosRecursos[0:recursos]
-                html += '</div>'
-        html += '</div>'
-        html += '</div>'
-        #html += '</div>'
-        data = 'no data'
-        recursos_arr=json.dumps(recursos_arr, cls=DjangoJSONEncoder)
-        recursosNombres_arr = json.dumps(recursosNombres_arr, cls=DjangoJSONEncoder)
+                                        duracionIndex+=1
+                                        try:
+                                            acumulacionTiempo = tiempoRecurso + acumulacionTiempo + Decimal(
+                                                duracionSegmentos[duracionIndex])
+                                        except:
+                                            acumulacionTiempo = 0
+                                        html += '<p class="font-weight-bold dark-grey-text"><mdb-icon far icon="clock" class="pr-2"</mdb-icon> ' + str(horaConDesplazamiento.time()) + '</p>'
+                                        html += '</div>'
+                                        html += '<div class="row">'
+                                        html += '<div class="col-lg-5">'
+                                        html += '<div class="view overlay rounded z-depth-2 mb-lg-0 mb-4 waves-light" mdbWavesEffect><img class="img-fluid" src="https://mdbootstrap.com/img/Photos/Others/img (28).jpg"/></div>'
+                                        html += '</div>'
+                                        html += '<div class="col-lg-7">'
+                                        html += '<a href="#!" class="indigo-text"><h6 class="font-weight-bold mb-3"><mdb-icon fas icon="suitcase" class="pr-2"></mdb-icon>Travels</h6></a>'
+                                        html += '<h3 class="font-weight-bold mb-3"><strong>' + nombreRecurso + '</strong></h3>'
+                                        html += '<p>' + descipcionRecurso + '</p>'
+                                        html += '<p><strong>Tiempo de visita estimado:</strong> ' + str(tiempoRecurso) + ' h</p>'
+                                        html += '<button type="button" mdbBtn color="primary" mdbWavesEffect>Primary</button>'
+                                        html += '</div>'
+                                        html += '</div>'
+                                        html += '</div>'
+                                        html += '</div>'
+                                        html += '<div class="line-between"></div>'
+                                        itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}, None])
+                                        itemsPlanMovil.append({"index":recursoIndex,"travel_duration":int(duracion),"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": float(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": recursoIndex,"note":None})
+                                        recursoIndex = recursoIndex + 1
+                                html += '</div>'
+                                plan.append({str(fechaSiguienteSinHora):itemsPlan})
+                                planMovil.append({"date":str(fechaSiguienteSinHora),"points":itemsPlanMovil})
+                                # eliminamos los recursos que ya hemos usado
+                                del imagenesRecursos[0:recursos]
+                                del tiempos[0:recursos]
+                                del nombreRecursos[0:recursos]
+                                del descipcionRecursos[0:recursos]
+                                del tipoRecursos[0:recursos]
+                                del observacionesRecursos[0:recursos]
+                                del fotosRecursos[0:recursos]
 
-        new_plan = PlanMovil()
-        new_plan.plan = {'plan': plan, 'planMovil': planMovil, 'data':geojson, 'dataProperties': geojsonProperties, 'recursos':recursos_arr, 'recursosNombres':recursosNombres_arr,'recursosIds':resursosIds_arr }
-        #new_plan.user = request.user
-        new_plan.save()
+                            else:
+                                print('inicio: '+ str(nuevoDiaInicio))
+                                for i in range(horasDiarias):
+                                    horasUtiles +=1
+                                    print(nuevoDiaInicio + relativedelta(hours=+(i + 1)))
+                                print('Horas dia ' + str(j + 3) +': '+ str(horasDiarias))
+                                html += '<div class="dayBlock">'
+                                html += '<div class="dia-container">'
+                                html += '<p class="font-weight-bold dark-grey-text">'+str(fechaSiguienteSinHora)+'</p><hr class="my-5">'
+                                html += '</div>'
+                                html += '<div class="line-between"></div>'
+                                acumulacionTiempo = 0
+                                recursos = 0
+                                try:
+                                    acumulacionTiempo = acumulacionTiempo + Decimal(duracionSegmentos[duracionIndex])
+                                except:
+                                    acumulacionTiempo = 0
+                                itemsPlan = []
+                                itemsPlanMovil = []
+                                for index, tiempo in enumerate(tiempos):
+                                    tiempoRecurso = tiempo.get('tiempo')
+                                    if acumulacionTiempo <= horasDiarias:
+                                        recursos += 1
+                                        nombreRecurso = nombreRecursos[index].get('nombre')
+                                        descipcionRecurso = descipcionRecursos[index].get('descripcion')
+                                        tipoRecurso = tipoRecursos[index].get('tipo')
+                                        observacionesRecurso = observacionesRecursos[index].get('observaciones')
+                                        fotosRecurso = fotosRecursos[index].get('images')
+                                        html += '<div class="itinerarioRuta">'
+                                        html += '<div class="left-col-ruta"></div>'
+                                        html += '<div class="right-col-ruta">'
+                                        duracion = '0'
+                                        try:
+                                            duracion = str(int(duracionSegmentos[duracionIndex] * 60))
+                                            html += '<hr class="my-5"><span class="travel-time"><i class="fa fa-car" aria-hidden="true"></i>  ' + str(
+                                                int(duracionSegmentos[duracionIndex] * 60)) + ' minutos</span>'
+                                        except:
+                                            html += ''
+                                        html += '</div>'
+                                        html += '</div>'
+                                        html += '<div class="itinerario">'
+                                        html += '<div class="contenidoVisita">'
+                                        html += '<div class="left-col">'
+                                        hora = nuevoDiaInicio + relativedelta(hours=+float(acumulacionTiempo))
+                                        horaConDesplazamiento = hora + relativedelta(
+                                            minutes=+int(duracionSegmentos[duracionIndex]))
 
-        context = {
-            #'html': html,
-            #'data':geojson,
-            #'dataProperties': geojsonProperties,
-            #'recursos':recursos_arr,
-            #'recursosNombres':recursosNombres_arr,
-            #'plan':plan,
-            'planMovil':planMovil,
-            #'recursosIds':resursosIds_arr,
-            'id': new_plan.id,
-            'url': 'https://tur-i-app.web.app/planmovil/' + str(new_plan.id),
-            'save': False
-        }
-        return Response(context, status=status.HTTP_200_OK)
+                                        duracionIndex+=1
+                                        try:
+                                            acumulacionTiempo = tiempoRecurso + acumulacionTiempo + Decimal(
+                                                duracionSegmentos[duracionIndex])
+                                        except:
+                                            acumulacionTiempo = 0
+                                        html += '<p class="font-weight-bold dark-grey-text"><mdb-icon far icon="clock" class="pr-2"</mdb-icon> ' + str(horaConDesplazamiento.time()) + '</p>'
+                                        html += '</div>'
+                                        html += '<div class="row">'
+                                        html += '<div class="col-lg-5">'
+                                        html += '<div class="view overlay rounded z-depth-2 mb-lg-0 mb-4 waves-light" mdbWavesEffect><img class="img-fluid" src="https://mdbootstrap.com/img/Photos/Others/img (28).jpg"/></div>'
+                                        html += '</div>'
+                                        html += '<div class="col-lg-7">'
+                                        html += '<a href="#!" class="indigo-text"><h6 class="font-weight-bold mb-3"><mdb-icon fas icon="suitcase" class="pr-2"></mdb-icon>Travels</h6></a>'
+                                        html += '<h3 class="font-weight-bold mb-3"><strong>' + nombreRecurso + '</strong></h3>'
+                                        html += '<p>' + descipcionRecurso + '</p>'
+                                        html += '<p><strong>Tiempo de visita estimado:</strong> ' + str(tiempoRecurso) + ' h</p>'
+                                        html += '<button type="button" mdbBtn color="primary" mdbWavesEffect>Primary</button>'
+                                        html += '</div>'
+                                        html += '</div>'
+                                        html += '</div>'
+                                        html += '</div>'
+                                        html += '<div class="line-between"></div>'
+                                        itemsPlan.append([str(recursoIndex),duracion,str(horaConDesplazamiento.time()),nombreRecurso,descipcionRecurso,str(tiempoRecurso),tipoRecurso,observacionesRecurso,imagenesRecursos[index],recursos_arr[recursoIndex],str(recursoIndex),{'visibilityPoi':True},{'visibilitySegment':True}, None])
+                                        itemsPlanMovil.append({"index":recursoIndex,"travel_duration":int(duracion),"time":str(horaConDesplazamiento.time()),"title": nombreRecurso,"description":descipcionRecurso,"poi_duration": float(tiempoRecurso),"type": tipoRecurso, "observation":observacionesRecurso,"images":imagenesRecursos[index],"coordinates": recursos_arr[recursoIndex],"order": recursoIndex,"note":None})
+                                        recursoIndex = recursoIndex + 1
+                                html += '</div>'
+                                plan.append({str(fechaSiguienteSinHora):itemsPlan})
+                                planMovil.append({"date": str(fechaSiguienteSinHora), "points":itemsPlanMovil})
+                                # eliminamos los recursos que ya hemos usado
+                                del imagenesRecursos[0:recursos]
+                                del tiempos[0:recursos]
+                                del nombreRecursos[0:recursos]
+                                del descipcionRecursos[0:recursos]
+                                del tipoRecursos[0:recursos]
+                                del observacionesRecursos[0:recursos]
+                                del fotosRecursos[0:recursos]
+                    html += '</div>'
+            html += '</div>'
+            html += '</div>'
+            #html += '</div>'
+            data = 'no data'
+            recursos_arr=json.dumps(recursos_arr, cls=DjangoJSONEncoder)
+            recursosNombres_arr = json.dumps(recursosNombres_arr, cls=DjangoJSONEncoder)
 
+            new_plan = PlanMovil()
+            new_plan.plan = {'plan': plan, 'planMovil': planMovil, 'data':geojson, 'dataProperties': geojsonProperties, 'recursos':recursos_arr, 'recursosNombres':recursosNombres_arr,'recursosIds':resursosIds_arr }
+            #new_plan.user = request.user
+            new_plan.save()
+
+            context = {
+                #'html': html,
+                #'data':geojson,
+                #'dataProperties': geojsonProperties,
+                #'recursos':recursos_arr,
+                #'recursosNombres':recursosNombres_arr,
+                #'plan':plan,
+                'planMovil':planMovil,
+                #'recursosIds':resursosIds_arr,
+                'id': new_plan.id,
+                'url': 'https://tur-i-app.web.app/planmovil/' + str(new_plan.id),
+                'save': False
+            }
+            return Response(context, status=status.HTTP_200_OK)
+        else:
+            context = {
+                #'html': html,
+                #'data':geojson,
+                #'dataProperties': geojsonProperties,
+                #'recursos':recursos_arr,
+                #'recursosNombres':recursosNombres_arr,
+                #'plan':plan,
+                'planMovil':None,
+                #'recursosIds':resursosIds_arr,
+                'id': None,
+                'url': None,
+                'save': None
+            }
+            return Response(context, status=status.HTTP_200_OK)
 
 class MovePoiPlanView(views.APIView):
     def post(self, request):
         id = request.data['id']
         save = request.data['save']
-        date = request.data['date']
-        previousIndex = request.data['previousIndex']
-        currentIndex = request.data['currentIndex']
+        previousDate = request.data['previousDate']
+        currentDate = request.data['currentDate']
+        previousOrder = request.data['previousOrder']
+        currentOrder = request.data['currentOrder']
 
+        #cogemos el plan siempre de la tabla no oficial PlanMovil.
         if (request.data['save']) == 'True' or (request.data['save']) == 'true':
-            queryset = Plan.objects.get(id=request.data['id'])
+            #Bucamos en la tabla PlanMovil el id por el campo savedPlan
+            queryset = PlanMovil.objects.get(savedPlan=request.data['id'])
+            #queryset = Plan.objects.get(id=request.data['id'])
         else:
             queryset = PlanMovil.objects.get(id=request.data['id'])
         planField = queryset.plan
 
-        #cambiamos plan y lo devolvemos
+        #cambiamos plan mediante logica en python, lo guardamos en la tabla haciendo update en la tabla no oficial PlanMovil  y lo devolvemos
 
         context = {
             'planMovil': planField['planMovil'],
-            'id': id,
+            'id': queryset.id,
             'url': 'https://tur-i-app.web.app/planmovil/' + str(id),
             'save': False
         }
@@ -851,19 +873,22 @@ class DeletePoiPlanView(views.APIView):
         id = request.data['id']
         save = request.data['save']
         date = request.data['date']
-        previousIndex = request.data['previousIndex']
+        order = request.data['order']
 
+        #cogemos el plan siempre de la tabla no oficial PlanMovil
         if (request.data['save']) == 'True' or (request.data['save']) == 'true':
-            queryset = Plan.objects.get(id=request.data['id'])
+            #Bucamos en la tabla PlanMovil el id por el campo savedPlan
+            queryset = PlanMovil.objects.get(savedPlan=request.data['id'])
+            #queryset = Plan.objects.get(id=request.data['id'])
         else:
             queryset = PlanMovil.objects.get(id=request.data['id'])
         planField = queryset.plan
 
-        #cambiamos plan y lo devolvemos
+        #cambiamos plan mediante logica en python, lo guardamos en la tabla no oficial PlanMovil  y lo devolvemos
 
         context = {
             'planMovil': planField['planMovil'],
-            'id': id,
+            'id': queryset.id,
             'url': 'https://tur-i-app.web.app/planmovil/' + str(id),
             'save': False
         }
@@ -874,69 +899,196 @@ class CommentPoiPlanView(views.APIView):
         id = request.data['id']
         save = request.data['save']
         date = request.data['date']
-        currentIndex = request.data['currentIndex']
+        order = request.data['order']
         note = request.data['note']
 
+        #cogemos el plan siempre de la tabla no oficial PlanMovil
         if (request.data['save']) == 'True' or (request.data['save']) == 'true':
-            queryset = Plan.objects.get(id=request.data['id'])
+            #Bucamos en la tabla PlanMovil el id por el campo savedPlan
+            queryset = PlanMovil.objects.get(savedPlan=request.data['id'])
+            #queryset = Plan.objects.get(id=request.data['id'])
         else:
             queryset = PlanMovil.objects.get(id=request.data['id'])
         planField = queryset.plan
 
-        #cambiamos plan y lo devolvemos
+        #cambiamos plan mediante logica en python, lo guardamos en la tabla no oficial PlanMovil  y lo devolvemos
 
         context = {
             'planMovil': planField['planMovil'],
-            'id': id,
+            'id': queryset.id,
             'url': 'https://tur-i-app.web.app/planmovil/' + str(id),
             'save': False
         }
         return Response(context, status=status.HTTP_200_OK)
 
 class ReviewPoiPlanView(views.APIView):
+    authentication_classes = (TokenAuthentication,) #TokenAuthentication
+    permission_classes = (IsAuthenticated,)
+
     def post(self, request):
         id = request.data['id']
         save = request.data['save']
         date = request.data['date']
-        currentIndex = request.data['currentIndex']
+        order = request.data['order']
         pointsReview = request.data['pointsReview']
         commentReview = request.data['commentReview']
 
+        #cogemos el plan siempre de la tabla no oficial PlanMovil
         if (request.data['save']) == 'True' or (request.data['save']) == 'true':
-            queryset = Plan.objects.get(id=request.data['id'])
+            #Bucamos en la tabla PlanMovil el id por el campo savedPlan
+            queryset = PlanMovil.objects.get(savedPlan=request.data['id'])
+            #queryset = Plan.objects.get(id=request.data['id'])
         else:
             queryset = PlanMovil.objects.get(id=request.data['id'])
         planField = queryset.plan
 
-        #cambiamos plan y lo devolvemos
+        #cambiamos plan mediante logica en python, lo guardamos en la tabla no oficial PlanMovil  y lo devolvemos
 
         context = {
             'planMovil': planField['planMovil'],
-            'id': id,
+            'id': queryset.id,
             'url': 'https://tur-i-app.web.app/planmovil/' + str(id),
             'save': False
         }
         return Response(context, status=status.HTTP_200_OK)
 
+class GetPlanException(APIException):
+    status_code = 200
+    default_detail = 'No existe el plan'
+    default_code = 12
+
+class GetPlanMovil(views.APIView):
+    def get(self, request):
+        id = request.data['id']
+        #siempre creo una replica nueva en PlanMovil.
+        if Plan.objects.filter(id=request.data['id']).exists():
+            queryset = Plan.objects.get(id=request.data['id'])
+            new_plan = PlanMovil()
+            new_plan.nombre = queryset.nombre
+            new_plan.descripcion = queryset.descripcion
+            new_plan.plan = queryset.plan
+            new_plan.shared = queryset.shared
+            new_plan.foto = queryset.foto
+            new_plan.savedPlan = id
+            new_plan.saved = False
+            new_plan.user = queryset.user
+            new_plan.save()
+
+            context = {
+                    'planMovil':new_plan.plan['planMovil'],
+                    'id': new_plan.id,
+                    'url': 'https://tur-i-app.web.app/planmovil/' + str(new_plan.id),
+                    'save': True
+                }
+            return Response(context, status=status.HTTP_200_OK)     
+        else:
+           
+            raise GetPlanException()
+
+class EditPlanException(APIException):
+    status_code = 200
+    default_detail = 'El plan no ha sido editado'
+    default_code = 13
+
+class SharePlan(views.APIView):
+    authentication_classes = (TokenAuthentication,) #TokenAuthentication
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        try:
+            id = request.POST.get('id')
+            share = request.POST.get('shared')
+            if share:
+                queryset = Plan.objects.get(id=request.data['id'])
+                if (request.data['shared']) == 'True' or (request.data['shared']) == 'true':
+                    queryset.shared=True
+                    queryset.save()
+                    context = {"id": queryset.id, "save": True}
+                    return Response(context, status=status.HTTP_200_OK)
+                else:
+                    queryset.shared=False
+                    queryset.save()
+                    context = {"id": queryset.id, "save": False}
+                    return Response(context, status=status.HTTP_200_OK)
+        except:
+            raise EditPlanException()
+
+
+class EditPlanView(views.APIView):
+    authentication_classes = (TokenAuthentication,) #TokenAuthentication
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        try:
+            id = request.POST.get('id')
+            name = request.POST.get('name')
+            description = request.POST.get('description')
+            foto = request.FILES.get('photo')
+            if foto:
+                ext = foto.name.split('.')[-1]
+                foto.name = f'{uuid.uuid4()}.{ext}'
+
+            queryset = PlanMovil.objects.get(id=request.data['id'])
+            queryset.nombre=name
+            queryset.descripcion=description
+            queryset.save()
+
+            #Plan.objects.filter(pk=queryset.savedPlan).update(nombre=name, descripcion=description, plan=queryset.plan, foto=os.path.join('uploads/plan/', filename))
+            m = Plan.objects.get(pk=queryset.savedPlan)
+            if name:
+                m.nombre=name
+            if description:
+                m.descripcion=description
+            m.plan=queryset.plan
+            if foto:
+                m.foto = request.FILES['photo']
+            m.save()
+                        
+            PlanMovil.objects.filter(pk=request.data['id']).update(saved=True, savedPlan=queryset.savedPlan)
+
+            #borramos el guardado anterior en el caso de que exista para no ocupar espacio
+            oldPlanqueryset = PlanMovil.objects.filter(savedPlan=queryset.savedPlan, saved=True).order_by('id')
+            print(oldPlanqueryset.count())
+            if oldPlanqueryset.count() > 1:
+                oldPlanqueryset[0].delete()
+
+            context = {"id": queryset.id, "save": True}
+            return Response(context, status=status.HTTP_200_OK)
+        except:
+            raise EditPlanException()
+
+class SavePlanException(APIException):
+    status_code = 200
+    default_detail = 'El plan no ha sido guardado'
+    default_code = 14
 
 class SavePlanView(views.APIView):
     authentication_classes = (TokenAuthentication,) #TokenAuthentication
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
-        id = request.data['id']
-        name = request.data['name']
-        description = request.data['description']
+        try:
+            id = request.POST.get('id')
+            name = request.POST.get('name')
+            description = request.POST.get('description')
+            foto = request.FILES.get('photo')
 
-        queryset = PlanMovil.objects.get(id=request.data['id'])
-        planField = queryset.plan
+            queryset = PlanMovil.objects.get(id=request.data['id'])
+            new_plan = Plan()
+            if name:
+                new_plan.nombre = name
+            if description:
+                new_plan.descripcion = description
+            if foto:
+                new_plan.foto = request.FILES['photo']
+            new_plan.plan = queryset.plan
+            new_plan.shared = False
+            #new_plan.foto = queryset.foto
+            new_plan.user = request.user
+            new_plan.save()
+            PlanMovil.objects.filter(pk=request.data['id']).update(saved=True, savedPlan=new_plan.id)
 
-        new_plan = Plan()
-        new_plan.nombre = name
-        new_plan.descripcion = description
-        new_plan.plan = queryset.plan
-        new_plan.user = request.user
-        new_plan.save()
-
-        context = {"id": new_plan.id, "save": True}
-        return Response(context, status=status.HTTP_200_OK)
+            context = {"id": new_plan.id, "save": True}
+            return Response(context, status=status.HTTP_200_OK)
+        except:
+            raise SavePlanException()

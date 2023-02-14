@@ -5,7 +5,7 @@ def custom_exception_handler(exc, context):
     # Call REST framework's default exception handler first,
     # to get the standard error response.
     response = exception_handler(exc, context)
-
+    print(exc)
     # Now add the HTTP status code to the response.
     if response is not None:
         #9b043af4161276899b8b08e6e56f5bf091c968a7
@@ -18,6 +18,20 @@ def custom_exception_handler(exc, context):
                 response.data['status_code'] = response.status_code
                 response.data['reason'] = http.client.responses.get(response.status_code)
                 response.data['status'] = 2
+            elif response.data.get('detail') == 'No existe el plan':
+                response.data['status_code'] = response.status_code
+                response.data['reason'] = http.client.responses.get(response.status_code)
+                response.data['status'] = 12
+            elif response.data.get('detail') == 'El plan no ha sido editado':
+                response.data['status_code'] = response.status_code
+                response.data['reason'] = http.client.responses.get(response.status_code)
+                response.data['status'] = 13
+            elif response.data.get('detail') == 'El plan no ha sido guardado':
+                response.data['status_code'] = response.status_code
+                response.data['reason'] = http.client.responses.get(response.status_code)
+                response.data['status'] = 14
+
+
         elif response.data.get('non_field_errors'):        
             if "unable to authenticate with provided credentials" in response.data['non_field_errors'][0].lower():
                 response.data['status_code'] = response.status_code
@@ -58,6 +72,5 @@ def custom_exception_handler(exc, context):
                 response.data['status_code'] = response.status_code
                 response.data['reason'] = http.client.responses.get(response.status_code)
                 response.data['status'] = 11
-
 
     return response

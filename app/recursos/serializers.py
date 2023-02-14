@@ -3,40 +3,44 @@ from rest_framework_gis.serializers import GeoFeatureModelSerializer,GeometrySer
 from rest_framework_gis.fields import GeometryField
 from django.contrib.gis.geos import Point
 
-from core.models import PuntoInteres, Restaurante, Reporte, PuntoInteresImage, Plan, Storymap, PlanMovil, Region, Entrada, Interes, Modo
+from core.models import PuntoInteres, Restaurante, Reporte, PuntoInteresImage, Plan, Storymap, PlanMovil, Region, Entrada, Interes, Modo, Ruta, Subregion, Provincia
 from core.models import GPXTrack, GPXPoint, TrackPoint
 
-
-
-
-class PuntoInteresSerializer(GeoFeatureModelSerializer):
-    """ A class to serialize PuntoInteres as GeoJSON compatible data """
-    geom = GeometryField(source='transformed')
-    #items = serializers.RelatedField(source='image',read_only=True)
-
-    class Meta:
-        model = PuntoInteres
-        depth = 1 #para devolver la tabla relacional
-        geo_field = "geom"
-        fields = ('id', 'nombre','tipo','descripcion','observaciones','panorama360','tiempo','images','modelo3D','user','geom','region')
-        read_only_Fields = ('id',)
 
 class PuntoInteresImageSerializer(serializers.ModelSerializer):
     """Serializer for uploading images to restaurante"""
 
     class Meta:
-        model = PuntoInteres
-        fields = ('id', 'image')
+        model = PuntoInteresImage
+        fields = ('id', 'image','puntoInteres')
         read_only_fields = ('id',)
+
+class PuntoInteresSerializer(GeoFeatureModelSerializer):
+    """ A class to serialize PuntoInteres as GeoJSON compatible data """
+    geom = GeometryField(source='transformed')
+    #images = serializers.CharField(source='image.image', required=True) 
+    #items = serializers.RelatedField(source='image',read_only=True)
+    images = PuntoInteresImageSerializer(many=True)
+    idPoi = serializers.IntegerField(source='id')
+
+    class Meta:
+        model = PuntoInteres
+        #depth = 1 #para devolver la tabla relacional
+        geo_field = "geom"
+        fields = ('id','idPoi', 'nombre','tipo','descripcion','observaciones','panorama360','tiempo','images','modelo3D','user','geom','subregion')
+        read_only_Fields = ('id',)
+
+
 
 class RestauranteSerializer(GeoFeatureModelSerializer):
     """ A class to serialize Restaurante as GeoJSON compatible data """
     geom = GeometryField(source='transformed')
+    idRestaurante = serializers.IntegerField(source='id')
 
     class Meta:
         model = Restaurante
         geo_field = "geom"
-        fields = ('id', 'nombre','cocina','direccion','poblacion','telefono','email','foto')
+        fields = ('id', 'idRestaurante', 'nombre','cocina','direccion','poblacion','telefono','email','foto')
         read_only_Fields = ('id',)
 
 
@@ -86,12 +90,20 @@ class ReporteImageSerializer(serializers.ModelSerializer):
         fields = ('id', 'foto')
         read_only_fields = ('id',)
 
-class PlanSerializer(serializers.ModelSerializer):
+class PlanSharedSerializer(serializers.ModelSerializer):
     """ A class to serialize Plan Object"""
-
+    userName = serializers.CharField(source='user.name', required=False)   
     class Meta:
         model = Plan
-        fields = ('id', 'nombre', 'plan', 'foto', 'descripcion','shared')
+        fields = ('id', 'nombre', 'plan', 'foto', 'descripcion','shared','creationDate','modificationDate','userName')
+        read_only_Fields = ('id',)
+
+class PlanSerializer(serializers.ModelSerializer):
+    """ A class to serialize Plan Object"""
+    userName = serializers.CharField(source='user.name', required=False)   
+    class Meta:
+        model = Plan
+        fields = ('id', 'nombre', 'plan', 'foto', 'descripcion', 'gpx', 'shared','creationDate','modificationDate','userName')
         read_only_Fields = ('id',)
 
 class PlanMovilSerializer(serializers.ModelSerializer):
@@ -102,24 +114,108 @@ class PlanMovilSerializer(serializers.ModelSerializer):
         fields = ('id', 'plan')
         read_only_Fields = ('id',)
 
+class PlansForViewinMobilViewSetSerializer(serializers.ModelSerializer):
+    """ A class to serialize Plan Object"""
+    #https://stackoverflow.com/questions/35522768/django-serializer-imagefield-to-get-full-url
+    userName = serializers.CharField(source='user.name', required=False)
+    #photo_url = serializers.SerializerMethodField()
+    foto = serializers.ImageField(max_length=None, use_url=True, allow_null=True, required=False)
+    class Meta:
+        model = Plan
+        fields = ('id', 'nombre', 'foto', 'descripcion','shared','creationDate','userName')
+        read_only_Fields = ('id',)
+
+    def get_photo_url(self, plan):
+        request = self.context.get('request')
+        try:
+            photo_url = plan.foto.url
+        except:
+            photo_url = None
+        return request.build_absolute_uri(photo_url)
+
+class RutaSerializer(serializers.ModelSerializer):
+    """ A class to serialize Plan Object"""
+    userName = serializers.CharField(source='user.name', required=False)   
+    class Meta:
+        model = Ruta
+        fields = ('id', 'nombre', 'puntos', 'path', 'gpx', 'tipo', 'shared','creationDate','modificationDate','userName')
+        read_only_Fields = ('id',)
+
 class RegionGeoJSONSerializer(GeoFeatureModelSerializer):
     """A class to serialize Region Object as geojson"""
     geom = GeometryField(source='transformed')
+    provinciaName = serializers.CharField(source='provincia.nombre', required=False)
+    provinciaId = serializers.IntegerField(source='provincia.id', required=False)
     #items = serializers.RelatedField(source='image',read_only=True)
 
     class Meta:
         model = Region
         geo_field = "geom"
-        fields = ('id', 'nombre', 'geom')
+        fields = ('id', 'nombre', 'geom','provinciaName','provinciaId')
         read_only_Fields = ('id',)
+
+class SubregionGeoJSONSerializer(GeoFeatureModelSerializer):
+    """A class to serialize Region Object as geojson"""
+    geom = GeometryField(source='transformed')
+    regionName = serializers.CharField(source='region.nombre', required=False)
+    regionId = serializers.IntegerField(source='region.id', required=False)
+    regionColor = serializers.CharField(source='region.color', required=False)
+
+    class Meta:
+        model = Subregion
+        geo_field = "geom"
+        depth = 1
+        fields = ('id', 'nombre','enabled','descripcion','images', 'geom','regionName','regionId','regionColor')
+        read_only_Fields = ('id',)
+
+class SubregionMovilSerializer(serializers.ModelSerializer):
+    """A class to serialize Region Object"""   
+    class Meta:
+        model = Subregion
+        fields = ('id', 'nombre')
+        read_only_fields = ('id',)
+
+class SubregionSerializer(serializers.ModelSerializer):
+    """A class to serialize Subregion Object"""
+    #regionName = serializers.CharField(source='region.nombre', required=False)
+    #regionId = serializers.IntegerField(source='region.id', required=False)
+    #provinciaName = serializers.CharField(source='region.provincia.nombre', required=False)
+    #provinciaId = serializers.IntegerField(source='region.provincia.id', required=False)
+
+    class Meta:
+        model = Subregion
+        fields = ('id', 'nombre','enabled')
+        read_only_fields = ('id',)
 
 class RegionSerializer(serializers.ModelSerializer):
     """A class to serialize Region Object"""
-
+    subregiones = SubregionSerializer( many=True)
+    
     class Meta:
         model = Region
-        fields = ('id', 'nombre', 'geom')
+        fields = ('id', 'nombre','subregiones')
         read_only_fields = ('id',)
+
+class ProvinciaSerializer(serializers.ModelSerializer):
+    """A class to serialize Provincia Object"""
+    #regiones = serializers.SlugRelatedField(
+        #many=True,
+        #read_only=True,
+        #slug_field='nombre'
+    #)
+    #subregiones =serializers.SerializerMethodField()
+    regiones = RegionSerializer( many=True)
+
+
+    class Meta:
+        model = Provincia
+        fields = ('id', 'nombre','regiones')
+        read_only_fields = ('id',)
+
+    #def get_subregiones(self,obj):
+        #cat = Subregion.objects.get(id=1)
+        #print(cat)
+        #return cat.nombre
 
 class EntradaSerializer(serializers.ModelSerializer):
     """A class to serialize Entrada Object"""
@@ -163,12 +259,13 @@ class AlojamientoSerializer(serializers.Serializer):
 '''
 class GPXTrackSerializer(GeoFeatureModelSerializer):
     """Serializer for GPXTrack object"""
+    idRuta = serializers.IntegerField(source='id')
 
     class Meta:
         model = GPXTrack
         geo_field = "geom"
         auto_bbox = True
-        fields = ('id', 'nombre', 'tipo', 'matricula','dificultad','longitud','circular','foto','descripcion', 'gpx_fichero', 'geom')
+        fields = ('id','idRuta', 'nombre', 'tipo', 'matricula','dificultad','longitud','circular','foto','descripcion', 'gpx_fichero', 'geom')
         read_only_Fields = ('id',)
 
 

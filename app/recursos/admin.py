@@ -52,7 +52,7 @@ class StorymapAdmin(LeafletGeoAdmin):
     list_per_page = 15
 
 class PlanAdmin(admin.ModelAdmin):
-    list_display = ['nombre','user','shared']
+    list_display = ['id','nombre','user','shared']
     list_filter = (
         ('nombre'),
         ('user')
@@ -60,12 +60,31 @@ class PlanAdmin(admin.ModelAdmin):
     list_per_page = 15
 
 class PlanMovilAdmin(admin.ModelAdmin):
-    list_display = ['nombre','user','saved']
+    list_display = ['id','nombre','user','saved']
     list_filter = (
         ('nombre'),
         ('user')
     )
     list_per_page = 15
+
+class RutaAdmin(admin.ModelAdmin):
+    list_display = ['nombre','user','shared']
+    list_filter = (
+        ('nombre'),
+        ('user')
+    )
+    list_per_page = 15
+
+class ProvinciaAdmin(admin.ModelAdmin):
+    list_display = ['nombre']
+    list_filter = (
+        ('nombre'),
+    )
+    list_per_page = 15
+
+class RegionImageInline(admin.TabularInline):
+    model = recursos_models.RegionImage
+    extra = 3
 
 class RegionAdmin(LeafletGeoAdmin):
     list_display = ['nombre']
@@ -73,6 +92,19 @@ class RegionAdmin(LeafletGeoAdmin):
         ('nombre'),
     )
     list_per_page = 15
+    inlines = [ RegionImageInline, ]
+
+class SubregionImageInline(admin.TabularInline):
+    model = recursos_models.SubregionImage
+    extra = 3
+
+class SubregionAdmin(LeafletGeoAdmin):
+    list_display = ['nombre']
+    list_filter = (
+        ('nombre'),
+    )
+    list_per_page = 15
+    inlines = [ SubregionImageInline, ]
 
 class EntradaAdmin(LeafletGeoAdmin):
     list_display = ['nombre']
@@ -131,7 +163,10 @@ admin.site.register(recursos_models.Restaurante, RestauranteAdmin)
 admin.site.register(recursos_models.Storymap, StorymapAdmin)
 admin.site.register(recursos_models.Plan, PlanAdmin)
 admin.site.register(recursos_models.PlanMovil, PlanMovilAdmin)
+admin.site.register(recursos_models.Provincia, ProvinciaAdmin)
 admin.site.register(recursos_models.Region, RegionAdmin)
+admin.site.register(recursos_models.Subregion, SubregionAdmin)
 admin.site.register(recursos_models.Entrada, EntradaAdmin)
 admin.site.register(recursos_models.Interes, InteresAdmin)
 admin.site.register(recursos_models.Modo, ModoAdmin)
+admin.site.register(recursos_models.Ruta, RutaAdmin)

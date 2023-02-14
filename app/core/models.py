@@ -9,6 +9,21 @@ from django.conf import settings
 from django.utils.timezone import now
 
 
+def regiones_image_file_path(instance, filename):
+    """Generate file path for new regiones image"""
+    ext = filename.split('.')[-1]
+    filename = f'{uuid.uuid4()}.{ext}'
+
+    return os.path.join('uploads/regiones/', filename)
+
+def subregiones_image_file_path(instance, filename):
+    """Generate file path for new subregiones image"""
+    ext = filename.split('.')[-1]
+    filename = f'{uuid.uuid4()}.{ext}'
+
+    return os.path.join('uploads/subregiones/', filename)
+
+
 def punto_interes_image_file_path(instance, filename):
     """Generate file path for new puntoInteres image"""
     ext = filename.split('.')[-1]
@@ -107,9 +122,22 @@ class StorymapsType(models.TextChoices):
     MUSICA = 'MUSICA', 'Musica'
     DEPORTE = 'DEPORTE', 'Deporte'
 
+class Provincia(models.Model):
+    nombre = models.CharField(max_length=100, blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Provincia'
+        verbose_name_plural = 'Provincias'
+
+    def __str__(self):
+        return str(self.nombre)
+
 class Region(geoModels.Model):
     nombre = models.CharField(max_length=100, blank=True, null=True)
-    geom = geoModels.PolygonField(srid=4326, blank=True, null=True)
+    geom = geoModels.MultiPolygonField(srid=4326, blank=True, null=True)
+    descripcion = models.TextField("Descripción", max_length=1500, blank=True)
+    color = models.CharField(max_length=100, blank=True, null=True)
+    provincia = models.ForeignKey(Provincia,on_delete=models.CASCADE, null=True, related_name='regiones')
 
     class Meta:
         verbose_name = 'Región'
@@ -117,6 +145,36 @@ class Region(geoModels.Model):
 
     def __str__(self):
         return str(self.nombre)
+
+class RegionImage(models.Model):
+    region = models.ForeignKey(Region, related_name='images',on_delete=models.CASCADE)
+    image = models.ImageField(upload_to=regiones_image_file_path, blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Material multimedia de las subregiones'
+        verbose_name_plural = 'Materiales multimedia de las subregiones'
+
+class Subregion(geoModels.Model):
+    nombre = models.CharField(max_length=100, blank=True, null=True)
+    geom = geoModels.MultiPolygonField(srid=4326, blank=True, null=True)
+    descripcion = models.TextField("Descripción", max_length=1500, blank=True)
+    enabled = models.BooleanField(null=False, default=False)
+    region = models.ForeignKey(Region,on_delete=models.CASCADE, null=True, related_name='subregiones')
+
+    class Meta:
+        verbose_name = 'Subregión'
+        verbose_name_plural = 'Subregiones'
+
+    def __str__(self):
+        return str(self.nombre)
+
+class SubregionImage(models.Model):
+    subregion = models.ForeignKey(Subregion, related_name='images',on_delete=models.CASCADE)
+    image = models.ImageField(upload_to=subregiones_image_file_path, blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Material multimedia de las subregiones'
+        verbose_name_plural = 'Materiales multimedia de las subregiones'
 
 class Entrada(geoModels.Model):
     nombre = models.CharField(max_length=100, blank=True, null=True)
@@ -169,7 +227,7 @@ class PuntoInteres(geoModels.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE
     )
-    region = models.ForeignKey(Region,on_delete=models.CASCADE)
+    subregion = models.ForeignKey(Subregion,on_delete=models.CASCADE)
     # objects = models.GeoManager()
 
     class Meta:
@@ -270,6 +328,7 @@ class Plan(geoModels.Model):
     foto = models.ImageField(upload_to=plan_image_file_path,
                              blank=True, null=True)
     descripcion = models.CharField(max_length=254, blank=True, null=True)
+    gpx = models.JSONField(blank=True, null=True)
     shared = models.BooleanField(null=False, default=False)
     creationDate = models.DateTimeField(default=now, blank=False)
     modificationDate = models.DateTimeField(default=now, blank=False)
@@ -292,7 +351,8 @@ class PlanMovil(geoModels.Model):
                              blank=True, null=True)
     descripcion = models.CharField(max_length=254, blank=True, null=True)
     shared = models.BooleanField(null=False, default=False)
-    saved =models.BooleanField(null=False, default=False)
+    saved = models.BooleanField(null=False, default=False)
+    savedPlan = models.IntegerField(null=True, default=False)
     creationDate = models.DateTimeField(default=now, blank=False)
     modificationDate = models.DateTimeField(default=now, blank=False)
     user = models.ForeignKey(
@@ -331,6 +391,20 @@ class Detalle(models.Model):
     def __str__(self):
         return str(self.significado)
 
+class Ruta(models.Model):
+    nombre = models.CharField(max_length=100, blank=True, null=True)
+    puntos = models.JSONField()
+    path = models.JSONField()
+    gpx = models.JSONField(blank=True, null=True)
+    tipo = models.CharField(max_length=100, blank=True, null=True)
+    shared = models.BooleanField(null=False, default=False)
+    creationDate = models.DateTimeField(default=now, blank=False)
+    modificationDate = models.DateTimeField(default=now, blank=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        blank=True, null=True
+    )
 
 class TrackType(models.TextChoices):
     SENDEROS_HOMOLOGADOS = 'SENDEROS_HOMOLOGADOS', 'Senderos homologados'
