@@ -222,7 +222,7 @@ class EntradaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Entrada
-        fields = ('id', 'nombre', 'region', 'geom')
+        fields = ('id', 'nombre', 'geom')
         read_only_fields = ('id',)
 
 class InteresSerializer(serializers.ModelSerializer):

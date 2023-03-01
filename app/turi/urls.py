@@ -35,6 +35,8 @@ urlpatterns = [
     path('api/recursos/alojamientos/', views.AlojamientoView.as_view()),
     path('api/recursos/dominios/', views.DominiosView.as_view()),
     path('api/recursos/insertregions/', views.InsertRegionsView.as_view()),
+    path('api/recursos/loadpois/', views.LoadPoisView.as_view()),
+    path('api/recursos/loadimages/', views.LoadImagesView.as_view()),
     path('api/recursos/provincias/', views.ProvinciaView.as_view()),
     path('api/recursos/regiones/', views.RegionMovilView.as_view()),
     path('api/recursos/subregiones/', views.SubregionView.as_view()),

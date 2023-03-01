@@ -840,126 +840,138 @@ class PlanMovilView(views.APIView):
             }
             return Response(context, status=status.HTTP_200_OK)
 
+class GetPlanException(APIException):
+    status_code = 200
+    default_detail = 'No existe el plan'
+    default_code = 12
+
 class MovePoiPlanView(views.APIView):
     def post(self, request):
-        id = request.data['id']
-        save = request.data['save']
-        previousDate = request.data['previousDate']
-        currentDate = request.data['currentDate']
-        previousOrder = request.data['previousOrder']
-        currentOrder = request.data['currentOrder']
+        id = request.POST.get('id')
+        save = request.POST.get('save')
+        previousDate = request.POST.get('previousDate')
+        currentDate = request.POST.get('currentDate')
+        previousOrder = request.POST.get('previousOrder')
+        currentOrder = request.POST.get('currentOrder')
+        if PlanMovil.objects.filter(id=request.POST.get('id')).exists():
+            save = False
+            #cogemos el plan siempre de la tabla no oficial PlanMovil.
+            if request.POST.get('save') in ('True', 'true', 1, '1'):
+                #Bucamos en la tabla PlanMovil el id por el campo savedPlan
+                queryset = PlanMovil.objects.get(id=request.data['id'])
+                save = True
+            else:
+                queryset = PlanMovil.objects.get(id=request.data['id'])
+            planField = queryset.plan
 
-        #cogemos el plan siempre de la tabla no oficial PlanMovil.
-        if (request.data['save']) == 'True' or (request.data['save']) == 'true':
-            #Bucamos en la tabla PlanMovil el id por el campo savedPlan
-            queryset = PlanMovil.objects.get(savedPlan=request.data['id'])
-            #queryset = Plan.objects.get(id=request.data['id'])
+            #cambiamos plan mediante logica en python, lo guardamos en la tabla haciendo update en la tabla no oficial PlanMovil  y lo devolvemos
+
+            context = {
+                'planMovil': planField['planMovil'],
+                'id': queryset.id,
+                'url': 'https://tur-i-app.web.app/planmovil/' + str(id),
+                'save': save
+            }
+            return Response(context, status=status.HTTP_200_OK)
         else:
-            queryset = PlanMovil.objects.get(id=request.data['id'])
-        planField = queryset.plan
-
-        #cambiamos plan mediante logica en python, lo guardamos en la tabla haciendo update en la tabla no oficial PlanMovil  y lo devolvemos
-
-        context = {
-            'planMovil': planField['planMovil'],
-            'id': queryset.id,
-            'url': 'https://tur-i-app.web.app/planmovil/' + str(id),
-            'save': False
-        }
-        return Response(context, status=status.HTTP_200_OK)
+            raise GetPlanException()
 
 class DeletePoiPlanView(views.APIView):
     def post(self, request):
-        id = request.data['id']
-        save = request.data['save']
-        date = request.data['date']
-        order = request.data['order']
+        id = request.POST.get('id')
+        save = request.POST.get('save')
+        date = request.POST.get('date')
+        order = request.POST.get('order')
+        if PlanMovil.objects.filter(id=request.POST.get('id')).exists():
+            save = False
+            #cogemos el plan siempre de la tabla no oficial PlanMovil
+            if request.POST.get('save') in ('True', 'true', 1, '1'):
+                #Bucamos en la tabla PlanMovil el id por el campo savedPlan
+                queryset = PlanMovil.objects.get(id=request.data['id'])
+                save = True
+            else:
+                queryset = PlanMovil.objects.get(id=request.data['id'])
+            planField = queryset.plan
 
-        #cogemos el plan siempre de la tabla no oficial PlanMovil
-        if (request.data['save']) == 'True' or (request.data['save']) == 'true':
-            #Bucamos en la tabla PlanMovil el id por el campo savedPlan
-            queryset = PlanMovil.objects.get(savedPlan=request.data['id'])
-            #queryset = Plan.objects.get(id=request.data['id'])
+            #cambiamos plan mediante logica en python, lo guardamos en la tabla no oficial PlanMovil  y lo devolvemos
+
+            context = {
+                'planMovil': planField['planMovil'],
+                'id': queryset.id,
+                'url': 'https://tur-i-app.web.app/planmovil/' + str(id),
+                'save': save
+            }
+            return Response(context, status=status.HTTP_200_OK)
         else:
-            queryset = PlanMovil.objects.get(id=request.data['id'])
-        planField = queryset.plan
-
-        #cambiamos plan mediante logica en python, lo guardamos en la tabla no oficial PlanMovil  y lo devolvemos
-
-        context = {
-            'planMovil': planField['planMovil'],
-            'id': queryset.id,
-            'url': 'https://tur-i-app.web.app/planmovil/' + str(id),
-            'save': False
-        }
-        return Response(context, status=status.HTTP_200_OK)
+            raise GetPlanException()
 
 class CommentPoiPlanView(views.APIView):
     def post(self, request):
-        id = request.data['id']
-        save = request.data['save']
-        date = request.data['date']
-        order = request.data['order']
-        note = request.data['note']
+        id = request.POST.get('id')
+        save = request.POST.get('save')
+        date = request.POST.get('date')
+        order = request.POST.get('order')
+        note = request.POST.get('note')
+        if PlanMovil.objects.filter(id=request.POST.get('id')).exists():
+            save = False
+            #cogemos el plan siempre de la tabla no oficial PlanMovil
+            if request.POST.get('save') in ('True', 'true', 1, '1'):
+                queryset = PlanMovil.objects.get(id=request.data['id'])
+                save = True
+            else:
+                queryset = PlanMovil.objects.get(id=request.data['id'])
+            planField = queryset.plan
 
-        #cogemos el plan siempre de la tabla no oficial PlanMovil
-        if (request.data['save']) == 'True' or (request.data['save']) == 'true':
-            #Bucamos en la tabla PlanMovil el id por el campo savedPlan
-            queryset = PlanMovil.objects.get(savedPlan=request.data['id'])
-            #queryset = Plan.objects.get(id=request.data['id'])
+            #cambiamos plan mediante logica en python, lo guardamos en la tabla no oficial PlanMovil  y lo devolvemos
+
+            context = {
+                'planMovil': planField['planMovil'],
+                'id': queryset.id,
+                'url': 'https://tur-i-app.web.app/planmovil/' + str(id),
+                'save': save
+            }
+            return Response(context, status=status.HTTP_200_OK)
         else:
-            queryset = PlanMovil.objects.get(id=request.data['id'])
-        planField = queryset.plan
-
-        #cambiamos plan mediante logica en python, lo guardamos en la tabla no oficial PlanMovil  y lo devolvemos
-
-        context = {
-            'planMovil': planField['planMovil'],
-            'id': queryset.id,
-            'url': 'https://tur-i-app.web.app/planmovil/' + str(id),
-            'save': False
-        }
-        return Response(context, status=status.HTTP_200_OK)
+            raise GetPlanException()
 
 class ReviewPoiPlanView(views.APIView):
     authentication_classes = (TokenAuthentication,) #TokenAuthentication
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
-        id = request.data['id']
-        save = request.data['save']
-        date = request.data['date']
-        order = request.data['order']
-        pointsReview = request.data['pointsReview']
-        commentReview = request.data['commentReview']
+        id = request.POST.get('id')
+        save = request.POST.get('save')
+        date = request.POST.get('date')
+        order = request.POST.get('order')
+        pointsReview = request.POST.get('pointsReview')
+        commentReview = request.POST.get('commentReview')
+        if PlanMovil.objects.filter(id=request.POST.get('id')).exists():
+            save = False
+            #cogemos el plan siempre de la tabla no oficial PlanMovil
+            if request.POST.get('save') in ('True', 'true', 1, '1'):
+                #Bucamos en la tabla PlanMovil el id por el campo savedPlan
+                queryset = PlanMovil.objects.get(id=request.data['id'])
+                save = True
+            else:
+                queryset = PlanMovil.objects.get(id=request.data['id'])
+            planField = queryset.plan
 
-        #cogemos el plan siempre de la tabla no oficial PlanMovil
-        if (request.data['save']) == 'True' or (request.data['save']) == 'true':
-            #Bucamos en la tabla PlanMovil el id por el campo savedPlan
-            queryset = PlanMovil.objects.get(savedPlan=request.data['id'])
-            #queryset = Plan.objects.get(id=request.data['id'])
+            #cambiamos plan mediante logica en python, lo guardamos en la tabla no oficial PlanMovil  y lo devolvemos
+
+            context = {
+                'planMovil': planField['planMovil'],
+                'id': queryset.id,
+                'url': 'https://tur-i-app.web.app/planmovil/' + str(id),
+                'save': save
+            }
+            return Response(context, status=status.HTTP_200_OK)
         else:
-            queryset = PlanMovil.objects.get(id=request.data['id'])
-        planField = queryset.plan
+            raise GetPlanException()
 
-        #cambiamos plan mediante logica en python, lo guardamos en la tabla no oficial PlanMovil  y lo devolvemos
-
-        context = {
-            'planMovil': planField['planMovil'],
-            'id': queryset.id,
-            'url': 'https://tur-i-app.web.app/planmovil/' + str(id),
-            'save': False
-        }
-        return Response(context, status=status.HTTP_200_OK)
-
-class GetPlanException(APIException):
-    status_code = 200
-    default_detail = 'No existe el plan'
-    default_code = 12
 
 class GetPlanMovil(views.APIView):
-    def get(self, request):
-        id = request.data['id']
+    def post(self, request):
+        id = request.POST.get('id')
         #siempre creo una replica nueva en PlanMovil.
         if Plan.objects.filter(id=request.data['id']).exists():
             queryset = Plan.objects.get(id=request.data['id'])
@@ -981,8 +993,7 @@ class GetPlanMovil(views.APIView):
                     'save': True
                 }
             return Response(context, status=status.HTTP_200_OK)     
-        else:
-           
+        else:          
             raise GetPlanException()
 
 class EditPlanException(APIException):
@@ -1003,12 +1014,12 @@ class SharePlan(views.APIView):
                 if (request.data['shared']) == 'True' or (request.data['shared']) == 'true':
                     queryset.shared=True
                     queryset.save()
-                    context = {"id": queryset.id, "save": True}
+                    context = {"id": queryset.id, "shared": True}
                     return Response(context, status=status.HTTP_200_OK)
                 else:
                     queryset.shared=False
                     queryset.save()
-                    context = {"id": queryset.id, "save": False}
+                    context = {"id": queryset.id, "shared": False}
                     return Response(context, status=status.HTTP_200_OK)
         except:
             raise EditPlanException()

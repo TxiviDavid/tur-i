@@ -19,6 +19,8 @@ from rest_framework import status,serializers as sr
 from rest_framework.exceptions import APIException
 import os
 from django.contrib.gis.utils import LayerMapping
+#import overpy
+import requests
 
 class PlainValidationError(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
@@ -448,7 +450,8 @@ class EntradaViewSet(viewsets.GenericViewSet,
     queryset = Entrada.objects.all()
     def get_queryset(self):
         #"""Return objects"""
-        return self.queryset.filter(region=self.request.GET.get('regionId'))
+        #return self.queryset.filter(region=self.request.GET.get('regionId'))
+        return self.queryset.filter()
 
     def list(self, request):
         serializer = serializers.EntradaSerializer(self.get_queryset(), many=True)
@@ -558,3 +561,71 @@ class InsertRegionsView(views.APIView):
                       transform=False, encoding='iso-8859-1')
         lm.save(strict=True, verbose=True)
         return Response()
+
+class LoadPoisView(views.APIView):
+    def get(self, request):
+        #https://www.openstreetmap.org/query?lat=42.81940&lon=-1.64123#map=15/42.8194/-1.6412
+        #https://wiki.openstreetmap.org/wiki/Map_features
+        #api = overpy.Overpass()
+        api=None
+
+        query_result = api.query("""
+            area["wikidata" = "Q4018"]->.place;    
+            node["amenity"="place_of_worship"](area.place);
+                (._;>;);
+                out body;
+            """)
+
+
+        #points_array = [ GEOSGeometry('POINT(' + str(x.lon) + ' ' + str(x.lat) + ')') for x in query_result.nodes]
+        #points_series = gpd.GeoSeries(points_array)
+
+        monuments_array = [ { 
+            "name": x.tags.get("name", ""),
+            "name:en": x.tags.get("name:en", ""),
+            "geom": str(GEOSGeometry('POINT(' + str(x.lon) + ' ' + str(x.lat) + ')'))
+        } for x in query_result.nodes]
+
+        #monuments_gdf = gpd.GeoDataFrame(monuments_array, geometry=points_series, crs=4326)
+        return Response(monuments_array)
+
+class LoadImagesView(views.APIView):
+    def get_request_url(self,**kwargs):
+        url='https://www.googleapis.com/customsearch/v1?'
+        param=''.join(['{}={}&'.format(k,kwargs[k]) for k in kwargs])
+        url += param
+        return url
+
+    def search_images_google(self, query='example'):
+        # https://developers.google.com/custom-search/v1/reference/rest/v1/ImgType?hl=es-419
+        params = {
+            'key':'AIzaSyCs3RPvnmmZ3QCyab56JuuA6BK4WPAEqvY',
+            'cx':'a7e6477e537566d39',
+            'q': query,
+            'searchType': 'image',
+            'imgSize': 'large',
+            'imgColorType':'color',
+            'imgType':'photo',
+            'num':10,
+            'start':1,
+            'filter':1
+        }
+        urls = []
+        for n_query in range(params['num']):
+            url = self.get_request_url(**params)
+            response = requests.get(url)
+            response.raise_for_status()
+            results = response.json()
+            len_page = len(results['items'])
+            for item in range(len_page):
+                urls.append(results['items'][item]['link'])
+            params['start'] += params['num']
+        return list(urls)
+
+    def get(self, request):
+        ims = self.search_images_google('Alsasua pueblo')
+
+        
+
+        #monuments_gdf = gpd.GeoDataFrame(monuments_array, geometry=points_series, crs=4326)
+        return Response(ims)
