@@ -67,7 +67,8 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'user',
     'django.contrib.gis',
-    'recursos'
+    'recursos',
+    'intro'
 ]
 
 MIDDLEWARE = [

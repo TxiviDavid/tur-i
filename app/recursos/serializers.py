@@ -3,7 +3,7 @@ from rest_framework_gis.serializers import GeoFeatureModelSerializer,GeometrySer
 from rest_framework_gis.fields import GeometryField
 from django.contrib.gis.geos import Point
 
-from core.models import PuntoInteres, Restaurante, Reporte, PuntoInteresImage, Plan, Storymap, PlanMovil, Region, Entrada, Interes, Modo, Ruta, Subregion, Provincia
+from core.models import PuntoInteres, Restaurante, Reporte, PuntoInteresImage, Plan, Storymap, PlanMovil, Region, Entrada, Interes, Modo, Ruta, Subregion, Provincia, SignoReporte, TipoReporte, DetalleReporte
 from core.models import GPXTrack, GPXPoint, TrackPoint
 
 
@@ -230,6 +230,30 @@ class InteresSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Interes
+        fields = ('id', 'nombre')
+        read_only_fields = ('id',)
+
+class SignoReporteSerializer(serializers.ModelSerializer):
+    """A class to serialize SignoReporte Object"""
+
+    class Meta:
+        model = SignoReporte
+        fields = ('id', 'nombre')
+        read_only_fields = ('id',)
+
+class TipoReporteSerializer(serializers.ModelSerializer):
+    """A class to serialize TipoReporte Object"""
+
+    class Meta:
+        model = TipoReporte
+        fields = ('id', 'nombre')
+        read_only_fields = ('id',)
+
+class DetalleReporteSerializer(serializers.ModelSerializer):
+    """A class to serialize DetalleReporte Object"""
+
+    class Meta:
+        model = DetalleReporte
         fields = ('id', 'nombre')
         read_only_fields = ('id',)
 

@@ -152,6 +152,27 @@ class PruebaAdmin(LeafletGeoAdmin):
     map_template = 'leaflet/admin/widget.html'
     GeoJSON = ''
 
+class SignoReporteAdmin(admin.ModelAdmin):
+    list_display = ['nombre']
+    list_filter = (
+        ('nombre'),
+    )
+    list_per_page = 15
+
+class TipoReporteAdmin(admin.ModelAdmin):
+    list_display = ['nombre']
+    list_filter = (
+        ('nombre'),
+    )
+    list_per_page = 15
+
+class DetalleReporteAdmin(admin.ModelAdmin):
+    list_display = ['nombre']
+    list_filter = (
+        ('nombre'),
+    )
+    list_per_page = 15
+
 
 admin.site.register(recursos_models.PuntoInteres, PuntoInteresAdmin)
 admin.site.register(recursos_models.Reporte, ReportesAdmin)
@@ -168,5 +189,6 @@ admin.site.register(recursos_models.Region, RegionAdmin)
 admin.site.register(recursos_models.Subregion, SubregionAdmin)
 admin.site.register(recursos_models.Entrada, EntradaAdmin)
 admin.site.register(recursos_models.Interes, InteresAdmin)
-admin.site.register(recursos_models.Modo, ModoAdmin)
-admin.site.register(recursos_models.Ruta, RutaAdmin)
+admin.site.register(recursos_models.SignoReporte, SignoReporteAdmin)
+admin.site.register(recursos_models.TipoReporte, TipoReporteAdmin)
+admin.site.register(recursos_models. DetalleReporte, DetalleReporteAdmin)

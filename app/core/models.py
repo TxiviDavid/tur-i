@@ -122,6 +122,36 @@ class StorymapsType(models.TextChoices):
     MUSICA = 'MUSICA', 'Musica'
     DEPORTE = 'DEPORTE', 'Deporte'
 
+class SignoReporte(models.Model):
+    nombre = models.CharField(max_length=100, blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'SignoReporte'
+        verbose_name_plural = 'SignosReporte'
+
+    def __str__(self):
+        return str(self.nombre)
+
+class TipoReporte(models.Model):
+    nombre = models.CharField(max_length=100, blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'TipoReporte'
+        verbose_name_plural = 'TiposReporte'
+
+    def __str__(self):
+        return str(self.nombre)
+
+class DetalleReporte(models.Model):
+    nombre = models.CharField(max_length=100, blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'DetalleReporte'
+        verbose_name_plural = 'DetallesReporte'
+
+    def __str__(self):
+        return str(self.nombre)
+
 class Provincia(models.Model):
     nombre = models.CharField(max_length=100, blank=True, null=True)
 

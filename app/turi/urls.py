@@ -16,6 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
+from intro.views import IntroView
 from django.conf import settings
 from recursos import views
 from plan.views import PlanView
@@ -34,6 +35,7 @@ urlpatterns = [
     path('api/recursos/', include('recursos.urls')),
     path('api/recursos/alojamientos/', views.AlojamientoView.as_view()),
     path('api/recursos/dominios/', views.DominiosView.as_view()),
+    path('api/recursos/geoportalDominiosMovil/', views.DominiosMovilView.as_view()),
     path('api/recursos/insertregions/', views.InsertRegionsView.as_view()),
     path('api/recursos/loadpois/', views.LoadPoisView.as_view()),
     path('api/recursos/loadimages/', views.LoadImagesView.as_view()),
@@ -56,7 +58,8 @@ urlpatterns = [
         'api/docs/',
         SpectacularSwaggerView.as_view(url_name='api-schema'),
         name='api-docs',
-    )
+    ),
+    path(r'', IntroView.as_view()),  # Django JET URLS
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT,)

@@ -5,7 +5,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.generics import GenericAPIView
 
-from core.models import PuntoInteres, Restaurante, Reporte, Plan, Storymap, PlanMovil, Region, Entrada, Interes, Modo, Ruta, Provincia, Subregion
+from core.models import PuntoInteres, Restaurante, Reporte, Plan, Storymap, PlanMovil, Region, Entrada, Interes, Modo, Ruta, Provincia, Subregion, SignoReporte, TipoReporte, DetalleReporte
 from core.models import GPXTrack, GPXPoint, TrackPoint
 
 from recursos import serializers
@@ -163,11 +163,13 @@ class ReporteViewSet(BaseRecursosAttrViewSet):
 
     def create(self, request, *args, **kwargs):
         """Create a new recurso"""
+        request.data._mutable = True
         request.data['signo'] = int(request.data['signo'])
         request.data['tipo'] = int(request.data['tipo'])
         request.data['detalle'] = int(request.data['detalle'])
         coord = request.data['geom'].split(sep=" ")
         request.data['geom'] = GEOSGeometry('POINT(' + coord[0] + ' ' + coord[1] + ')')
+        request.data._mutable = False
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -547,6 +549,260 @@ class DominiosView(views.APIView):
         dominios.append({'cocina':dominioCocina})
         dominios.append({'poblacion':dominioPoblacion})
         return Response(dominios)
+
+class DominiosMovilView(views.APIView):
+    def get(self, request):
+        dominiosPois = []
+        dominiosRestaurantes = []
+        dominiosRutas = []
+        dominiosReportes = []
+        dominiosMultimedia = []
+        dominiosRutasTipo = [{'nombre':'FACIL'},{'nombre':'DIFICIL'},{'nombre':'CORTA'},{'nombre':'LARGA'},{'nombre':'CIRCULAR'},{'nombre':'HOMOLOGADA'}]
+        dominiosMultimediaTipo = [{'nombre':'MODELO3D'},{'nombre':'PANORAMA360'}]
+        dominiosReportesTipo = [{'nombre':'POSITIVO'},{'nombre':'NEGATIVO'}]
+        selected_modelPoi = apps.get_model('core', 'PuntoInteres')
+        dominioTipo = list(selected_modelPoi.objects.values('tipo').distinct())
+        for d in dominioTipo:
+            d['nombre'] = d.pop('tipo').upper().replace('_',' ')    
+        selected_modelR = apps.get_model('core', 'Restaurante')
+        dominioCocina = list(selected_modelR .objects.values('cocina').distinct())
+        for d in dominioCocina:
+            d['nombre'] = d.pop('cocina').upper() 
+        dominioPoblacion = list(selected_modelR .objects.values('poblacion').distinct())
+        for d in dominioPoblacion:
+            d['nombre'] = d.pop('poblacion').upper() 
+        dominiosPois.append({'tipo':list(dominioTipo)})
+        dominiosRestaurantes.append({'tipo':dominioCocina})
+        dominiosRestaurantes.append({'poblacion':dominioPoblacion})
+        dominiosRutas.append({'tipo':dominiosRutasTipo})
+        dominiosReportes.append({'tipo':dominiosReportesTipo})
+        dominiosMultimedia.append({'tipo':dominiosMultimediaTipo})
+        return Response({"restaurantes":dominiosRestaurantes,"rutas":dominiosRutas,"pois":dominiosPois,"reportes":dominiosReportes,"multimedia":dominiosMultimedia})
+
+class SignoReportesDominiosViewSet(viewsets.GenericViewSet,
+                              mixins.ListModelMixin,
+                              mixins.CreateModelMixin):
+    """Manage SignoReporte in the database"""
+    queryset = SignoReporte.objects.all()
+    serializer_class = serializers.SignoReporteSerializer
+    def get_queryset(self):
+        #"""Return objects"""
+        return self.queryset
+
+    def list(self, request):
+        serializer = self.serializer_class(self.get_queryset(), many=True)
+        return Response({"signo":serializer.data})
+
+class TipoReportesDominiosViewSet(viewsets.GenericViewSet,
+                              mixins.ListModelMixin,
+                              mixins.CreateModelMixin):
+    """Manage TipoReporte in the database"""
+    queryset = TipoReporte.objects.all()
+    serializer_class = serializers.TipoReporteSerializer
+    def get_queryset(self):
+        #"""Return objects"""
+        return self.queryset
+
+    def list(self, request):
+        serializer = self.serializer_class(self.get_queryset(), many=True)
+        return Response({"tipo":serializer.data})
+
+class TipoReportesPositivoDominiosViewSet(viewsets.GenericViewSet,
+                              mixins.ListModelMixin,
+                              mixins.CreateModelMixin):
+    """Manage TipoReporte in the database"""
+    queryset = TipoReporte.objects.filter(id__gt=0, id__lt=6)
+    serializer_class = serializers.TipoReporteSerializer
+    def get_queryset(self):
+        #"""Return objects"""
+        return self.queryset
+
+    def list(self, request):
+        serializer = self.serializer_class(self.get_queryset(), many=True)
+        return Response({"tipo":serializer.data})
+
+class TipoReportesNegativoDominiosViewSet(viewsets.GenericViewSet,
+                              mixins.ListModelMixin,
+                              mixins.CreateModelMixin):
+    """Manage TipoReporte in the database"""
+    queryset = TipoReporte.objects.filter(id__gt=5, id__lt=13)
+    serializer_class = serializers.TipoReporteSerializer
+    def get_queryset(self):
+        #"""Return objects"""
+        return self.queryset
+
+    def list(self, request):
+        serializer = self.serializer_class(self.get_queryset(), many=True)
+        return Response({"tipo":serializer.data})
+
+class DetalleReportesDominiosViewSet(viewsets.GenericViewSet,
+                              mixins.ListModelMixin,
+                              mixins.CreateModelMixin):
+    """Manage DetalleReporte in the database"""
+    queryset = DetalleReporte.objects.all()
+    serializer_class = serializers.DetalleReporteSerializer
+    def get_queryset(self):
+        #"""Return objects"""
+        return self.queryset
+
+    def list(self, request):
+        serializer = self.serializer_class(self.get_queryset(), many=True)
+        return Response({"detalle":serializer.data})
+
+        
+class DetalleVistaReportesDominiosViewSet(viewsets.GenericViewSet,
+                              mixins.ListModelMixin,
+                              mixins.CreateModelMixin):
+    """Manage DetalleVistaReportes in the database"""
+    queryset = DetalleReporte.objects.filter(id__gt=0, id__lt=7)
+    serializer_class = serializers.DetalleReporteSerializer
+    def get_queryset(self):
+        #"""Return objects"""
+        return self.queryset
+
+    def list(self, request):
+        serializer = self.serializer_class(self.get_queryset(), many=True)
+        return Response({"detalle":serializer.data})
+
+class DetalleInteresanteReportesDominiosViewSet(viewsets.GenericViewSet,
+                              mixins.ListModelMixin,
+                              mixins.CreateModelMixin):
+    """Manage DetalleInteresanteReportes in the database"""
+    queryset = DetalleReporte.objects.filter(id__gt=6, id__lt=14)
+    serializer_class = serializers.DetalleReporteSerializer
+    def get_queryset(self):
+        #"""Return objects"""
+        return self.queryset
+
+    def list(self, request):
+        serializer = self.serializer_class(self.get_queryset(), many=True)
+        return Response({"detalle":serializer.data})
+        
+class DetalleBienvenidaReportesDominiosViewSet(viewsets.GenericViewSet,
+                              mixins.ListModelMixin,
+                              mixins.CreateModelMixin):
+    """Manage DetalleBienvenidaReportes in the database"""
+    queryset = DetalleReporte.objects.filter(id__gt=13, id__lt=17)
+    serializer_class = serializers.DetalleReporteSerializer
+    def get_queryset(self):
+        #"""Return objects"""
+        return self.queryset
+
+    def list(self, request):
+        serializer = self.serializer_class(self.get_queryset(), many=True)
+        return Response({"detalle":serializer.data})
+
+class DetalleFaunaReportesDominiosViewSet(viewsets.GenericViewSet,
+                              mixins.ListModelMixin,
+                              mixins.CreateModelMixin):
+    """Manage DetalleFaunaReportes in the database"""
+    queryset = DetalleReporte.objects.filter(id__gt=16, id__lt=23)
+    serializer_class = serializers.DetalleReporteSerializer
+    def get_queryset(self):
+        #"""Return objects"""
+        return self.queryset
+
+    def list(self, request):
+        serializer = self.serializer_class(self.get_queryset(), many=True)
+        return Response({"detalle":serializer.data})
+
+class DetalleFloraReportesDominiosViewSet(viewsets.GenericViewSet,
+                              mixins.ListModelMixin,
+                              mixins.CreateModelMixin):
+    """Manage DetalleFloraReportes in the database"""
+    queryset = DetalleReporte.objects.filter(id__gt=22, id__lt=27)
+    serializer_class = serializers.DetalleReporteSerializer
+    def get_queryset(self):
+        #"""Return objects"""
+        return self.queryset
+
+    def list(self, request):
+        serializer = self.serializer_class(self.get_queryset(), many=True)
+        return Response({"detalle":serializer.data})
+
+class DetallePuenteReportesDominiosViewSet(viewsets.GenericViewSet,
+                              mixins.ListModelMixin,
+                              mixins.CreateModelMixin):
+    """Manage DetallePuenteReportes in the database"""
+    queryset = DetalleReporte.objects.filter(id__gt=26, id__lt=33)
+    serializer_class = serializers.DetalleReporteSerializer
+    def get_queryset(self):
+        #"""Return objects"""
+        return self.queryset
+
+    def list(self, request):
+        serializer = self.serializer_class(self.get_queryset(), many=True)
+        return Response({"detalle":serializer.data})
+
+class DetalleIntimidatorioReportesDominiosViewSet(viewsets.GenericViewSet,
+                              mixins.ListModelMixin,
+                              mixins.CreateModelMixin):
+    """Manage DetalleIntimidatorioReportes in the database"""
+    queryset = DetalleReporte.objects.filter(id__gt=32, id__lt=39)
+    serializer_class = serializers.DetalleReporteSerializer
+    def get_queryset(self):
+        #"""Return objects"""
+        return self.queryset
+
+    def list(self, request):
+        serializer = self.serializer_class(self.get_queryset(), many=True)
+        return Response({"detalle":serializer.data})
+
+class DetalleObstruccionReportesDominiosViewSet(viewsets.GenericViewSet,
+                              mixins.ListModelMixin,
+                              mixins.CreateModelMixin):
+    """Manage DetalleObstruccionReportes in the database"""
+    queryset = DetalleReporte.objects.filter(id__gt=38, id__lt=46)
+    serializer_class = serializers.DetalleReporteSerializer
+    def get_queryset(self):
+        #"""Return objects"""
+        return self.queryset
+
+    def list(self, request):
+        serializer = self.serializer_class(self.get_queryset(), many=True)
+        return Response({"detalle":serializer.data})
+
+class DetalleSuperficieReportesDominiosViewSet(viewsets.GenericViewSet,
+                              mixins.ListModelMixin,
+                              mixins.CreateModelMixin):
+    """Manage DetalleSuperficieReportes in the database"""
+    queryset = DetalleReporte.objects.filter(id__gt=45, id__lt=51)
+    serializer_class = serializers.DetalleReporteSerializer
+    def get_queryset(self):
+        #"""Return objects"""
+        return self.queryset
+
+    def list(self, request):
+        serializer = self.serializer_class(self.get_queryset(), many=True)
+        return Response({"detalle":serializer.data})
+
+class DetalleCruceReportesDominiosViewSet(viewsets.GenericViewSet,
+                              mixins.ListModelMixin,
+                              mixins.CreateModelMixin):
+    """Manage DetalleCruceReportes in the database"""
+    queryset = DetalleReporte.objects.filter(id__gt=50, id__lt=53)
+    serializer_class = serializers.DetalleReporteSerializer
+    def get_queryset(self):
+        #"""Return objects"""
+        return self.queryset
+
+    def list(self, request):
+        serializer = self.serializer_class(self.get_queryset(), many=True)
+        return Response({"detalle":serializer.data})
+
+class DetalleIndicacionReportesDominiosViewSet(viewsets.GenericViewSet,
+                              mixins.ListModelMixin,
+                              mixins.CreateModelMixin):
+    """Manage DetalleIndicacionReportes in the database"""
+    queryset = DetalleReporte.objects.filter(id__gt=52, id__lt=58)
+    serializer_class = serializers.DetalleReporteSerializer
+    def get_queryset(self):
+        #"""Return objects"""
+        return self.queryset
+
+    def list(self, request):
+        serializer = self.serializer_class(self.get_queryset(), many=True)
+        return Response({"detalle":serializer.data})
 
 class InsertRegionsView(views.APIView):
     def get(self, request):
